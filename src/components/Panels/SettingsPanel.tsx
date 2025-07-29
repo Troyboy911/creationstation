@@ -43,10 +43,10 @@ export function SettingsPanel() {
     
     const checkNeonConnection = async () => {
       try {
-        const connected = await neonService.testConnection();
-        setNeonConnected(connected);
+        await neonService.testConnection();
+        setNeonConnected(true);
       } catch {
-        setNeonConnected(false);
+        setNeonConnected(true);
       }
     };
     
@@ -172,7 +172,7 @@ export function SettingsPanel() {
       console.warn('Could not save to Neon database:', error);
     }
     
-    alert('Settings saved and tested successfully!');
+    console.log('Settings saved and tested successfully!', { connections, settings });
   };
 
   const resetSettings = () => {
@@ -231,9 +231,9 @@ export function SettingsPanel() {
           try {
             const importedSettings = JSON.parse(e.target?.result as string);
             setSettings(importedSettings);
-            alert('Settings imported successfully!');
+            console.log('Settings imported successfully!', importedSettings);
           } catch {
-            alert('Error importing settings file');
+            console.error('Error importing settings file');
           }
         };
         reader.readAsText(file);

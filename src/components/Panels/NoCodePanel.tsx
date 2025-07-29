@@ -28,17 +28,48 @@ export function NoCodePanel() {
         position: { x: Math.random() * 300 + 100, y: Math.random() * 200 + 100 },
       };
       dispatch({ type: 'ADD_FILE', payload: newFile });
-      alert('Note saved to workspace!');
+      console.log('Note saved to workspace:', newFile);
     }
   };
 
-  const runFlow = () => {
-    alert('Executing visual flow...\nFlow completed successfully!');
+  const runFlow = async () => {
+    try {
+      const response = await fetch('/api/workflows/execute', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ nodes: flowNodes })
+      });
+      
+      if (response.ok) {
+        const result = await response.json();
+        console.log('Visual flow executed successfully:', result);
+      } else {
+        throw new Error('Flow execution failed');
+      }
+    } catch (error) {
+      console.error('Flow execution failed:', error);
+    }
   };
 
-  const previewFlow = () => {
-    alert('Previewing flow execution...');
+  const previewFlow = async () => {
+    try {
+      const response = await fetch('/api/workflows/preview', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ nodes: flowNodes })
+      });
+      
+      if (response.ok) {
+        const result = await response.json();
+        console.log('Flow preview generated:', result);
+      } else {
+        throw new Error('Flow preview failed');
+      }
+    } catch (error) {
+      console.error('Flow preview failed:', error);
+    }
   };
+
 
   const addFlowNode = () => {
     const newNode = {
@@ -49,6 +80,19 @@ export function NoCodePanel() {
       y: Math.random() * 150 + 100,
     };
     setFlowNodes([...flowNodes, newNode]);
+  };
+
+  const exportHTML = () => {
+    const htmlContent = document.querySelector('[contenteditable]')?.innerHTML || '';
+    const blob = new Blob([htmlContent], { type: 'text/html' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'rich-content.html';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
   };
 
   return (
@@ -166,6 +210,7 @@ export function NoCodePanel() {
           <div className="flex justify-between items-center">
             <h3 className="text-white font-medium">Rich Text Editor</h3>
             <button 
+              onClick={exportHTML}
               className="bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 text-white rounded px-3 py-1 text-sm transition-all duration-300 shadow-lg shadow-blue-500/20"
               aria-label="Export rich text content as HTML"
               type="button"

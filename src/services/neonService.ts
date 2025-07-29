@@ -141,6 +141,24 @@ class NeonService {
 
   async testConnection(): Promise<boolean> {
     try {
+      const result = await fetch('/api/mcp/tool-call', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          server: 'neon',
+          toolName: 'list_projects',
+          args: {}
+        })
+      });
+      
+      if (result.ok) {
+        return true;
+      }
+    } catch (error) {
+      console.warn('Neon MCP connection test failed:', error);
+    }
+
+    try {
       if (!this.config.apiKey) {
         return false;
       }
@@ -154,9 +172,55 @@ class NeonService {
 
       return response.ok;
     } catch (error) {
-      console.warn('Neon connection test failed:', error);
+      console.warn('Neon API connection test failed:', error);
       return false;
     }
+  }
+
+  async saveProjectWithMCP(project: NeonProject): Promise<void> {
+    try {
+      const result = await fetch('/api/mcp/tool-call', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          server: 'neon',
+          toolName: 'create_project',
+          args: { project }
+        })
+      });
+      
+      if (result.ok) {
+        localStorage.setItem(`neon-project-${project.id}`, JSON.stringify(project));
+        return;
+      }
+    } catch (error) {
+      console.warn('Neon MCP save failed:', error);
+    }
+    
+    await this.saveProject(project);
+  }
+
+  async loadProjectsWithMCP(): Promise<NeonProject[]> {
+    try {
+      const result = await fetch('/api/mcp/tool-call', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          server: 'neon',
+          toolName: 'list_projects',
+          args: {}
+        })
+      });
+      
+      if (result.ok) {
+        const data = await result.json();
+        return data.projects || [];
+      }
+    } catch (error) {
+      console.warn('Neon MCP load failed:', error);
+    }
+    
+    return await this.loadProjects();
   }
 }
 

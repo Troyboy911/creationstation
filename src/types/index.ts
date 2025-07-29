@@ -18,7 +18,9 @@ export interface FileItem {
   content?: string;
   url?: string;
   size?: number;
+  path?: string;
   position: { x: number; y: number };
+  metadata?: Record<string, unknown>;
 }
 
 export interface AutomationRecipe {

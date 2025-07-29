@@ -120,10 +120,10 @@ export function PanelManager() {
     
     const viewportWidth = window.innerWidth;
     const viewportHeight = window.innerHeight;
-    const minX = 80;
-    const minY = 64;
+    const minX = 20;
+    const minY = 20;
     const maxX = Math.max(minX, viewportWidth - 280);
-    const maxY = Math.max(minY, viewportHeight - 150);
+    const maxY = Math.max(minY, viewportHeight - 100);
     
     newPosition.x = Math.max(minX, Math.min(newPosition.x, maxX));
     newPosition.y = Math.max(minY, Math.min(newPosition.y, maxY));
@@ -145,10 +145,10 @@ export function PanelManager() {
     
     const viewportWidth = window.innerWidth;
     const viewportHeight = window.innerHeight;
-    const minX = 80;
-    const minY = 64;
+    const minX = 20;
+    const minY = 20;
     const maxX = Math.max(minX, viewportWidth - 280);
-    const maxY = Math.max(minY, viewportHeight - 150);
+    const maxY = Math.max(minY, viewportHeight - 100);
     
     newPosition.x = Math.max(minX, Math.min(newPosition.x, maxX));
     newPosition.y = Math.max(minY, Math.min(newPosition.y, maxY));
@@ -206,8 +206,8 @@ export function PanelManager() {
     const responsiveHeight = Math.min(height, viewportHeight - 120);
     
     // Ensure panel stays within viewport with responsive constraints
-    const minX = 80;
-    const minY = 64;
+    const minX = 20;
+    const minY = 20;
     const maxX = Math.max(minX, viewportWidth - responsiveWidth - 20);
     const maxY = Math.max(minY, viewportHeight - responsiveHeight - 20);
     

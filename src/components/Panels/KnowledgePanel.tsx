@@ -40,21 +40,57 @@ export function KnowledgePanel() {
     }
   };
 
-  const connectToTana = () => {
-    alert('Connecting to Tana workspace...\nIntegration will be available soon!');
+  const connectToTana = async () => {
+    try {
+      const response = await fetch('/api/integrations/tana/connect', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ workspace: 'default' })
+      });
+      
+      if (response.ok) {
+        const result = await response.json();
+        console.log('Tana workspace connected:', result);
+        if (result.authUrl) {
+          window.open(result.authUrl, '_blank');
+        }
+      } else {
+        throw new Error('Tana connection failed');
+      }
+    } catch (error) {
+      console.error('Tana connection failed:', error);
+    }
   };
 
-  const exportKnowledge = () => {
-    const exportData = JSON.stringify(notes, null, 2);
-    const blob = new Blob([exportData], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = 'knowledge-export.json';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
+  const exportKnowledge = async () => {
+    try {
+      const response = await fetch('/api/knowledge/export', { method: 'POST' });
+      if (response.ok) {
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `knowledge-base-${Date.now()}.md`;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+      } else {
+        throw new Error('Knowledge export failed');
+      }
+    } catch (error) {
+      console.error('Knowledge export failed:', error);
+      const exportData = JSON.stringify(notes, null, 2);
+      const blob = new Blob([exportData], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = 'knowledge-export.json';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    }
   };
 
   const filteredNotes = notes.filter(note =>

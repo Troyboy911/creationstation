@@ -95,17 +95,33 @@ export function AutomationsPanel() {
     ? automationRecipes 
     : automationRecipes.filter(recipe => recipe.category === selectedCategory);
 
-  const runAutomation = (recipe: AutomationRecipe) => {
+  const runAutomation = async (recipe: AutomationRecipe) => {
     setRunningAutomations(prev => new Set([...prev, recipe.id]));
     
-    // Simulate automation execution
-    setTimeout(() => {
-      setRunningAutomations(prev => {
-        const newSet = new Set(prev);
-        newSet.delete(recipe.id);
-        return newSet;
+    try {
+      const response = await fetch('/api/automations/run', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ automationId: recipe.id, automation: recipe })
       });
-    }, 3000);
+      
+      if (response.ok) {
+        const result = await response.json();
+        console.log(`Automation "${recipe.name}" completed:`, result);
+      } else {
+        throw new Error('Automation execution failed');
+      }
+    } catch (error) {
+      console.error('Automation failed:', error);
+    } finally {
+      setTimeout(() => {
+        setRunningAutomations(prev => {
+          const newSet = new Set(prev);
+          newSet.delete(recipe.id);
+          return newSet;
+        });
+      }, 3000);
+    }
   };
 
   return (

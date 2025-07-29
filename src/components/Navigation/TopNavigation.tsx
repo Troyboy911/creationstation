@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { ChevronDown, Plus, FolderOpen, Layers, Settings } from 'lucide-react';
 import { useWorkspace } from '../../contexts/WorkspaceContext';
+import { AuthButton } from '../Auth/AuthButton';
 import { FileItem, Project } from '../../types';
 
 export function TopNavigation() {
@@ -86,7 +87,7 @@ export function TopNavigation() {
     { id: 'blank', name: 'Blank Project', icon: '📄' },
   ];
 
-  const createNewProject = (template: string) => {
+  const createNewProject = async (template: string) => {
     const projectName = prompt('Enter project name:') || `New ${template} Project`;
     
     const newProject: Project = {
@@ -101,6 +102,25 @@ export function TopNavigation() {
       type: template as 'react' | 'vue' | 'flutter' | 'shopify' | 'blank',
       status: 'active'
     };
+
+    try {
+      const response = await fetch('/api/projects/create', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ project: newProject, template })
+      });
+      
+      if (response.ok) {
+        const result = await response.json();
+        if (result.files) {
+          result.files.forEach((file: any) => {
+            dispatch({ type: 'ADD_FILE', payload: file });
+          });
+        }
+      }
+    } catch (error) {
+      console.error('Project creation API failed:', error);
+    }
     
     dispatch({ type: 'ADD_PROJECT', payload: newProject });
     dispatch({ type: 'SET_CURRENT_PROJECT', payload: newProject });
@@ -123,19 +143,58 @@ export function TopNavigation() {
     input.multiple = true;
     input.webkitdirectory = true;
     
-    input.onchange = (e) => {
+    input.onchange = async (e) => {
       const files = Array.from((e.target as HTMLInputElement).files || []);
-      alert(`Loading ${files.length} files from local directory...`);
+      try {
+        for (const file of files) {
+          const content = await file.text();
+          const fileItem = {
+            id: `file-${Date.now()}-${Math.random()}`,
+            name: file.name,
+            type: file.name.endsWith('.js') || file.name.endsWith('.ts') || file.name.endsWith('.jsx') || file.name.endsWith('.tsx') ? 'code' as const : 'document' as const,
+            content,
+            path: file.webkitRelativePath,
+            position: { x: Math.random() * 300 + 100, y: Math.random() * 200 + 100 }
+          };
+          dispatch({ type: 'ADD_FILE', payload: fileItem });
+        }
+        console.log(`Loaded ${files.length} files from directory`);
+      } catch (error) {
+        console.error('Failed to load directory:', error);
+      }
       setActiveDropdown(null);
     };
     
     input.click();
   };
 
-  const loadFromGitHub = () => {
+  const loadFromGitHub = async () => {
     const repoUrl = prompt('Enter GitHub repository URL:');
     if (repoUrl) {
-      alert(`Cloning repository: ${repoUrl}`);
+      try {
+        const response = await fetch('/api/github/clone', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ repoUrl })
+        });
+        
+        if (response.ok) {
+          const result = await response.json();
+          if (result.project) {
+            dispatch({ type: 'SET_CURRENT_PROJECT', payload: result.project });
+          }
+          if (result.files) {
+            result.files.forEach((file: any) => {
+              dispatch({ type: 'ADD_FILE', payload: file });
+            });
+          }
+          console.log(`Cloned repository: ${repoUrl}`);
+        } else {
+          throw new Error('GitHub clone failed');
+        }
+      } catch (error) {
+        console.error('GitHub clone failed:', error);
+      }
       setActiveDropdown(null);
     }
   };
@@ -145,10 +204,30 @@ export function TopNavigation() {
     input.type = 'file';
     input.accept = '.zip';
     
-    input.onchange = (e) => {
+    input.onchange = async (e) => {
       const file = (e.target as HTMLInputElement).files?.[0];
       if (file) {
-        alert(`Extracting ZIP file: ${file.name}`);
+        try {
+          const response = await fetch('/api/files/extract-zip', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ fileName: file.name })
+          });
+          
+          if (response.ok) {
+            const result = await response.json();
+            if (result.files) {
+              result.files.forEach((extractedFile: any) => {
+                dispatch({ type: 'ADD_FILE', payload: extractedFile });
+              });
+            }
+            console.log(`Extracted ZIP file: ${file.name}`);
+          } else {
+            throw new Error('ZIP extraction failed');
+          }
+        } catch (error) {
+          console.error('ZIP extraction failed:', error);
+        }
         setActiveDropdown(null);
       }
     };
@@ -161,10 +240,29 @@ export function TopNavigation() {
     input.type = 'file';
     input.accept = '.csv';
     
-    input.onchange = (e) => {
+    input.onchange = async (e) => {
       const file = (e.target as HTMLInputElement).files?.[0];
       if (file) {
-        alert(`Importing CSV data: ${file.name}`);
+        try {
+          const csvText = await file.text();
+          const response = await fetch('/api/files/import-csv', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ fileName: file.name, csvData: csvText })
+          });
+          
+          if (response.ok) {
+            const result = await response.json();
+            if (result.dataFile) {
+              dispatch({ type: 'ADD_FILE', payload: result.dataFile });
+            }
+            console.log(`Imported CSV data: ${file.name}`);
+          } else {
+            throw new Error('CSV import failed');
+          }
+        } catch (error) {
+          console.error('CSV import failed:', error);
+        }
         setActiveDropdown(null);
       }
     };
@@ -323,6 +421,7 @@ export function TopNavigation() {
           )}
         </div>
 
+        <AuthButton />
         <button 
           className="p-2 bg-gray-800/50 hover:bg-gradient-to-r hover:from-cyan-500/20 hover:to-blue-500/20 rounded-lg transition-all duration-300 border border-gray-700/50 hover:border-cyan-400/30 hover:shadow-lg hover:shadow-cyan-500/20"
           aria-label="Open settings"

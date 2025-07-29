@@ -20,36 +20,146 @@ export function DevToolsPanel() {
     ));
   };
 
-  const startDevServer = () => {
-    alert('Starting development server...\nServer will be available at http://localhost:3000');
-  };
-
-  const buildDockerImage = () => {
-    alert('Building Docker image...\nThis may take a few minutes.');
-  };
-
-  const deployToFirebase = () => {
-    alert('Deploying to Firebase...\nYour app will be live shortly!');
-  };
-
-  const openStackBlitz = () => {
-    window.open('https://stackblitz.com', '_blank');
-  };
-
-  const commitChanges = () => {
-    const message = prompt('Enter commit message:', 'Update project files');
-    if (message) {
-      alert(`Committed changes: "${message}"`);
+  const startDevServer = async () => {
+    try {
+      const response = await fetch('/api/dev/start', { method: 'POST' });
+      if (response.ok) {
+        const result = await response.json();
+        if (result.url) {
+          window.open(result.url, '_blank');
+        } else {
+          window.open('http://localhost:3000', '_blank');
+        }
+        setServices(services.map(service => 
+          service.id === 'terminal' 
+            ? { ...service, status: 'active' }
+            : service
+        ));
+      } else {
+        throw new Error('Failed to start dev server');
+      }
+    } catch (error) {
+      console.error('Failed to start dev server:', error);
+      window.open('http://localhost:3000', '_blank');
     }
   };
 
-  const createPullRequest = () => {
-    alert('Creating pull request...\nPR #123 created successfully!');
+  const buildDockerImage = async () => {
+    try {
+      setServices(services.map(service => 
+        service.id === 'docker' 
+          ? { ...service, status: 'active' }
+          : service
+      ));
+      
+      const response = await fetch('/api/docker/build', { method: 'POST' });
+      if (!response.ok) {
+        throw new Error('Docker build failed');
+      }
+      
+      const result = await response.json();
+      console.log('Docker build completed:', result);
+    } catch (error) {
+      console.error('Docker build failed:', error);
+      setServices(services.map(service => 
+        service.id === 'docker' 
+          ? { ...service, status: 'inactive' }
+          : service
+      ));
+    }
   };
 
-  const mergeToMain = () => {
+  const deployToFirebase = async () => {
+    try {
+      const response = await fetch('/api/deploy/firebase', { method: 'POST' });
+      if (response.ok) {
+        const result = await response.json();
+        if (result.url) {
+          window.open(result.url, '_blank');
+        }
+        console.log('Firebase deployment successful:', result);
+      } else {
+        throw new Error('Firebase deployment failed');
+      }
+    } catch (error) {
+      console.error('Firebase deployment failed:', error);
+    }
+  };
+
+  const openStackBlitz = () => {
+    window.open('https://stackblitz.com/fork/github/Troyboy911/creationstation', '_blank');
+  };
+
+  const commitChanges = async () => {
+    const message = prompt('Enter commit message:', 'Update project files');
+    if (message) {
+      try {
+        const response = await fetch('/api/git/commit', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ message })
+        });
+        
+        if (response.ok) {
+          const result = await response.json();
+          console.log('Git commit successful:', result);
+          setServices(services.map(service => 
+            service.id === 'github' 
+              ? { ...service, status: 'connected' }
+              : service
+          ));
+        } else {
+          throw new Error('Git commit failed');
+        }
+      } catch (error) {
+        console.error('Git commit failed:', error);
+      }
+    }
+  };
+
+  const createPullRequest = async () => {
+    try {
+      const response = await fetch('/api/git/pull-request', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title: 'Feature update from CreationStation',
+          description: 'Automated pull request created from CreationStation workspace'
+        })
+      });
+      
+      if (response.ok) {
+        const result = await response.json();
+        if (result.url) {
+          window.open(result.url, '_blank');
+        }
+        console.log('Pull request created:', result);
+      } else {
+        throw new Error('Failed to create pull request');
+      }
+    } catch (error) {
+      console.error('Failed to create pull request:', error);
+    }
+  };
+
+  const mergeToMain = async () => {
     if (confirm('Are you sure you want to merge to main branch?')) {
-      alert('Successfully merged to main branch!');
+      try {
+        const response = await fetch('/api/git/merge', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ branch: 'main' })
+        });
+        
+        if (response.ok) {
+          const result = await response.json();
+          console.log('Successfully merged to main branch:', result);
+        } else {
+          throw new Error('Merge failed');
+        }
+      } catch (error) {
+        console.error('Merge failed:', error);
+      }
     }
   };
 

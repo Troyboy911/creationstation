@@ -43,24 +43,94 @@ export function CloudStoragePanel() {
     input.click();
   };
 
-  const createBackup = () => {
-    alert('Creating backup of current workspace...\nBackup saved to cloud storage!');
+  const createBackup = async () => {
+    try {
+      const response = await fetch('/api/backup/create', { method: 'POST' });
+      if (response.ok) {
+        const result = await response.json();
+        console.log('Backup created successfully:', result);
+        if (result.downloadUrl) {
+          window.open(result.downloadUrl, '_blank');
+        }
+      } else {
+        throw new Error('Backup creation failed');
+      }
+    } catch (error) {
+      console.error('Backup failed:', error);
+    }
   };
 
-  const uploadDatabase = () => {
-    alert('Database backup uploaded successfully!');
+  const uploadDatabase = async () => {
+    try {
+      const response = await fetch('/api/backup/database', { method: 'POST' });
+      if (response.ok) {
+        const result = await response.json();
+        console.log('Database backup uploaded successfully:', result);
+      } else {
+        throw new Error('Database backup failed');
+      }
+    } catch (error) {
+      console.error('Database backup failed:', error);
+    }
   };
 
-  const syncAllServices = () => {
-    alert('Syncing all cloud services...\nSync completed successfully!');
+  const syncAllServices = async () => {
+    try {
+      const services = ['google-drive', 'firebase', 'github'];
+      const promises = services.map(service => 
+        fetch(`/api/sync/${service}`, { method: 'POST' })
+      );
+      
+      const results = await Promise.allSettled(promises);
+      const successful = results.filter(result => result.status === 'fulfilled').length;
+      
+      console.log(`Sync completed: ${successful}/${services.length} services synced successfully`);
+    } catch (error) {
+      console.error('Sync failed:', error);
+    }
   };
 
-  const deployToFirebase = () => {
-    alert('Deploying to Firebase hosting...\nDeployment successful!');
+  const deployToFirebase = async () => {
+    try {
+      const response = await fetch('/api/deploy/firebase', { method: 'POST' });
+      if (response.ok) {
+        const result = await response.json();
+        console.log('Firebase deployment successful:', result);
+        if (result.url) {
+          window.open(result.url, '_blank');
+        }
+      } else {
+        throw new Error('Firebase deployment failed');
+      }
+    } catch (error) {
+      console.error('Firebase deployment failed:', error);
+    }
   };
 
-  const openFile = (fileName: string, service: string) => {
-    alert(`Opening ${fileName} from ${service}`);
+  const openFile = async (fileName: string, service: string) => {
+    try {
+      const response = await fetch('/api/files/open', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ fileName, service })
+      });
+      
+      if (response.ok) {
+        const result = await response.json();
+        if (result.url) {
+          window.open(result.url, '_blank');
+        } else if (result.content) {
+          const blob = new Blob([result.content], { type: result.mimeType || 'text/plain' });
+          const url = URL.createObjectURL(blob);
+          window.open(url, '_blank');
+          setTimeout(() => URL.revokeObjectURL(url), 1000);
+        }
+      } else {
+        throw new Error('Failed to open file');
+      }
+    } catch (error) {
+      console.error('Failed to open file:', error);
+    }
   };
 
   return (

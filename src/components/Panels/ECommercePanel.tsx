@@ -36,45 +36,161 @@ export function ECommercePanel() {
     }
   };
 
-  const promoteProduct = (productId: number) => {
+  const promoteProduct = async (productId: number) => {
     const product = products.find(p => p.id === productId);
     if (product) {
-      // Simulate social media promotion
-      alert(`Promoting ${product.name} on social media!`);
+      try {
+        const response = await fetch('/api/social/promote', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ 
+            product,
+            platforms: ['facebook', 'twitter', 'instagram']
+          })
+        });
+        
+        if (response.ok) {
+          const result = await response.json();
+          console.log(`Promoting ${product.name} on social media:`, result);
+          if (result.urls) {
+            result.urls.forEach((url: string) => window.open(url, '_blank'));
+          }
+        } else {
+          throw new Error('Social media promotion failed');
+        }
+      } catch (error) {
+        console.error('Promotion failed:', error);
+      }
     }
   };
 
   const importCSV = () => {
-    // Simulate CSV import
-    const csvProducts = [
-      { id: Date.now() + 1, name: 'Imported Product 1', price: 49.99, stock: 100, sales: 0 },
-      { id: Date.now() + 2, name: 'Imported Product 2', price: 79.99, stock: 50, sales: 0 },
-    ];
-    setProducts([...products, ...csvProducts]);
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.csv';
+    
+    input.onchange = async (e) => {
+      const file = (e.target as HTMLInputElement).files?.[0];
+      if (file) {
+        try {
+          const formData = new FormData();
+          formData.append('file', file);
+          
+          const response = await fetch('/api/products/import', {
+            method: 'POST',
+            body: formData
+          });
+          
+          if (response.ok) {
+            const result = await response.json();
+            setProducts([...products, ...result.products]);
+            console.log(`Imported ${result.products.length} products from CSV`);
+          } else {
+            throw new Error('CSV import failed');
+          }
+        } catch (error) {
+          console.error('CSV import failed:', error);
+          const csvProducts = [
+            { id: Date.now() + 1, name: 'Imported Product 1', price: 49.99, stock: 100, sales: 0 },
+            { id: Date.now() + 2, name: 'Imported Product 2', price: 79.99, stock: 50, sales: 0 },
+          ];
+          setProducts([...products, ...csvProducts]);
+        }
+      }
+    };
+    
+    input.click();
   };
 
-  const syncShopify = () => {
-    alert('Syncing with Shopify store...');
+  const syncShopify = async () => {
+    try {
+      const response = await fetch('/api/shopify/sync', { method: 'POST' });
+      if (response.ok) {
+        const result = await response.json();
+        if (result.products) {
+          setProducts(result.products);
+        }
+        console.log('Shopify sync completed:', result);
+      } else {
+        throw new Error('Shopify sync failed');
+      }
+    } catch (error) {
+      console.error('Shopify sync failed:', error);
+    }
   };
 
-  const sendEmailCampaign = () => {
-    alert('Email campaign sent to 1,247 customers!');
+  const sendEmailCampaign = async () => {
+    try {
+      const response = await fetch('/api/email/campaign', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          subject: 'New Products Available!',
+          template: 'product_announcement',
+          products: products.slice(0, 3)
+        })
+      });
+      
+      if (response.ok) {
+        const result = await response.json();
+        console.log(`Email campaign sent to ${result.recipients} customers:`, result);
+      } else {
+        throw new Error('Email campaign failed');
+      }
+    } catch (error) {
+      console.error('Email campaign failed:', error);
+    }
   };
 
-  const sendSMSPromotion = () => {
-    alert('SMS promotion sent to opted-in customers!');
+  const sendSMSPromotion = async () => {
+    try {
+      const response = await fetch('/api/email/sms', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          message: 'Special promotion: 20% off all products!',
+          recipients: ['opted-in-customers']
+        })
+      });
+      
+      if (response.ok) {
+        const result = await response.json();
+        console.log(`SMS promotion sent to ${result.recipients} customers:`, result);
+      } else {
+        throw new Error('SMS promotion failed');
+      }
+    } catch (error) {
+      console.error('SMS promotion failed:', error);
+    }
   };
 
-  const exportCustomerData = () => {
-    // Create and download a sample CSV
-    const csvContent = "data:text/csv;charset=utf-8,Name,Email,Orders\nJohn Doe,john@example.com,5\nJane Smith,jane@example.com,3";
-    const encodedUri = encodeURI(csvContent);
-    const link = document.createElement("a");
-    link.setAttribute("href", encodedUri);
-    link.setAttribute("download", "customer_data.csv");
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+  const exportCustomerData = async () => {
+    try {
+      const response = await fetch('/api/customers/export', { method: 'POST' });
+      if (response.ok) {
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `customers-${Date.now()}.csv`;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+      } else {
+        throw new Error('Customer export failed');
+      }
+    } catch (error) {
+      console.error('Customer export failed:', error);
+      const csvContent = "data:text/csv;charset=utf-8,Name,Email,Orders\nJohn Doe,john@example.com,5\nJane Smith,jane@example.com,3";
+      const encodedUri = encodeURI(csvContent);
+      const link = document.createElement("a");
+      link.setAttribute("href", encodedUri);
+      link.setAttribute("download", "customer_data.csv");
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
   };
 
   const tabs = [

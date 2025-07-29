@@ -217,7 +217,7 @@ export function ${prompt.replace(/[^a-zA-Z]/g, '')}Component() {
       
       dispatch({ type: 'ADD_FILE', payload: newFile });
       setImagePrompt('');
-      alert(`Image generation failed: ${error instanceof Error ? error.message : 'Unknown error'}. Using fallback image.`);
+      console.error(`Image generation failed: ${error instanceof Error ? error.message : 'Unknown error'}. Using fallback image.`);
     } finally {
       setIsGenerating(false);
     }
@@ -229,30 +229,36 @@ export function ${prompt.replace(/[^a-zA-Z]/g, '')}Component() {
     setIsGenerating(true);
     
     try {
-      const videoPrompt = `Create a short video based on: ${imagePrompt}`;
+      const response = await fetch('/api/ai/generate-video', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompt: imagePrompt })
+      });
+      
+      if (response.ok) {
+        const result = await response.json();
+        const newFile = {
+          id: `video-${Date.now()}`,
+          name: `generated-video-${Date.now()}.mp4`,
+          type: 'video' as const,
+          url: result.videoUrl,
+          position: { x: Math.random() * 300 + 100, y: Math.random() * 200 + 100 },
+        };
+        dispatch({ type: 'ADD_FILE', payload: newFile });
+      } else {
+        throw new Error('Video generation API failed');
+      }
+    } catch (error) {
+      console.error('Video generation failed:', error);
       
       const newFile = {
         id: `video-${Date.now()}`,
-        name: `generated-${imagePrompt.replace(/\s+/g, '-').toLowerCase()}.mp4`,
+        name: `generated-video-${Date.now()}.mp4`,
         type: 'video' as const,
         url: 'https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_1mb.mp4',
-        metadata: {
-          prompt: videoPrompt,
-          duration: '10s',
-          resolution: '1280x720',
-          generated: true
-        },
         position: { x: Math.random() * 300 + 100, y: Math.random() * 200 + 100 },
       };
-      
       dispatch({ type: 'ADD_FILE', payload: newFile });
-      setImagePrompt('');
-      
-      alert('Video generation initiated! This is a placeholder - integrate with Runway ML or similar service for actual video generation.');
-      
-    } catch (error) {
-      console.error('Video generation failed:', error);
-      alert(`Video generation failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
     } finally {
       setIsGenerating(false);
     }
