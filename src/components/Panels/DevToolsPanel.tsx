@@ -1,8 +1,7 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Terminal, Github, Container, Code2, Play, GitBranch, ExternalLink } from 'lucide-react';
 
 export function DevToolsPanel() {
-  const [activeService, setActiveService] = useState<string | null>(null);
   const [services, setServices] = useState([
     { id: 'docker', name: 'Docker', icon: Container, status: 'inactive', color: 'blue' },
     { id: 'github', name: 'GitHub', icon: Github, status: 'connected', color: 'gray' },

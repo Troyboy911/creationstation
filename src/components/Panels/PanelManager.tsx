@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { X, Maximize2, Minimize2 } from 'lucide-react';
 import { useWorkspace } from '../../contexts/WorkspaceContext';
 import { AICodePanel } from './AICodePanel';
@@ -60,13 +60,13 @@ export function PanelManager() {
     }));
   };
 
-  const constrainToViewport = (panel: any) => {
+  const constrainToViewport = (panel: { id: string; position: { x: number; y: number }; size: { width: number; height: number } }) => {
     const viewportWidth = window.innerWidth;
     const viewportHeight = window.innerHeight;
     const panelState = panelStates[panel.id];
     
     let { x, y } = panel.position;
-    let { width, height } = panel.size;
+    const { width, height } = panel.size;
     
     if (panelState?.isMaximized) {
       return {

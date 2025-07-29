@@ -1,11 +1,12 @@
-import React, { useState } from 'react';
-import { Mic, Code, Image, Send, Sparkles, Copy, Plus } from 'lucide-react';
+import { useState } from 'react';
+import { Mic, Code, Image, Sparkles, Copy, Plus } from 'lucide-react';
 import { useWorkspace } from '../../contexts/WorkspaceContext';
+import { FileItem } from '../../types';
 
 const quickActions = [
   {
     label: '🚀 Bootstrap React App',
-    action: (dispatch: any) => {
+    action: (dispatch: React.Dispatch<{ type: 'ADD_FILE'; payload: FileItem }>) => {
       const files = [
         {
           id: `app-${Date.now()}`,
@@ -27,7 +28,7 @@ const quickActions = [
   },
   {
     label: '🎯 Generate API Endpoint',
-    action: (dispatch: any) => {
+    action: (dispatch: React.Dispatch<{ type: 'ADD_FILE'; payload: FileItem }>) => {
       const apiCode = `const express = require('express');\nconst app = express();\n\napp.get('/api/users', (req, res) => {\n  res.json({ users: [] });\n});\n\napp.listen(3000);`;
       const newFile = {
         id: `api-${Date.now()}`,
@@ -41,7 +42,7 @@ const quickActions = [
   },
   {
     label: '🎨 Create UI Component',
-    action: (dispatch: any) => {
+    action: (dispatch: React.Dispatch<{ type: 'ADD_FILE'; payload: FileItem }>) => {
       const componentCode = `import React from 'react';\n\nexport function Button({ children, onClick }) {\n  return (\n    <button \n      onClick={onClick}\n      className="px-4 py-2 bg-blue-500 text-white rounded"\n    >\n      {children}\n    </button>\n  );\n}`;
       const newFile = {
         id: `component-${Date.now()}`,

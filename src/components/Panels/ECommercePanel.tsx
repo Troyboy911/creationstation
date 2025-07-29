@@ -1,9 +1,7 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { ShoppingBag, TrendingUp, Users, DollarSign, BarChart3, Plus, Edit, Share2, Mail, MessageSquare, Download } from 'lucide-react';
-import { useWorkspace } from '../../contexts/WorkspaceContext';
 
 export function ECommercePanel() {
-  const { dispatch } = useWorkspace();
   const [activeTab, setActiveTab] = useState('products');
   const [products, setProducts] = useState([
     { id: 1, name: 'Premium Headphones', price: 299.99, stock: 45, sales: 127 },

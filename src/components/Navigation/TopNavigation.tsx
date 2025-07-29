@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { ChevronDown, Plus, FolderOpen, Layers, Settings } from 'lucide-react';
 import { useWorkspace } from '../../contexts/WorkspaceContext';
 
@@ -18,7 +18,7 @@ export function TopNavigation() {
     const newProject = {
       id: `project-${Date.now()}`,
       name: `New ${template.charAt(0).toUpperCase() + template.slice(1)} Project`,
-      type: template as any,
+      type: template as 'react' | 'vue' | 'flutter' | 'shopify' | 'blank',
       lastModified: new Date(),
       status: 'active' as const,
     };

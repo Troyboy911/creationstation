@@ -1,5 +1,4 @@
-import React from 'react';
-import { Cloud, Folder, FileText, Image, Database, RefreshCw, Upload, ExternalLink } from 'lucide-react';
+import { Folder, FileText, Database, RefreshCw, ExternalLink } from 'lucide-react';
 import { useWorkspace } from '../../contexts/WorkspaceContext';
 
 export function CloudStoragePanel() {

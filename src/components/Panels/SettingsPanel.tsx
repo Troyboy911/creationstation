@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Settings, Key, Palette, Monitor, Shield, AlertCircle, CheckCircle } from 'lucide-react';
 import { useWorkspace } from '../../contexts/WorkspaceContext';
 import { environment, validateEnvironment } from '../../config/environment';
@@ -47,7 +47,7 @@ export function SettingsPanel() {
     { id: 'workspace', label: 'Workspace', icon: Monitor },
   ];
 
-  const updateSetting = (category: string, key: string, value: any) => {
+  const updateSetting = (category: string, key: string, value: string | boolean | number) => {
     if (category === '') {
       setSettings(prev => ({
         ...prev,
@@ -57,7 +57,7 @@ export function SettingsPanel() {
       setSettings(prev => ({
         ...prev,
         [category]: {
-          ...(prev[category as keyof typeof prev] as any),
+          ...(prev[category as keyof typeof prev] as Record<string, unknown>),
           [key]: value
         }
       }));
@@ -92,7 +92,7 @@ export function SettingsPanel() {
       }));
       
       return isValid;
-    } catch (error) {
+    } catch {
       setConnectionStatus(prev => ({ ...prev, [service]: 'disconnected' }));
       return false;
     }
@@ -103,10 +103,10 @@ export function SettingsPanel() {
       Object.entries(settings.apiKeys).map(async ([service, key]) => {
         const isConnected = key ? await testConnection(service, key) : false;
         return {
-          id: service,
-          name: service.charAt(0).toUpperCase() + service.slice(1),
-          status: isConnected ? 'connected' : 'disconnected',
-          lastSync: isConnected ? new Date() : undefined,
+          service: service.charAt(0).toUpperCase() + service.slice(1),
+          status: (isConnected ? 'connected' : 'disconnected') as 'connected' | 'disconnected' | 'error',
+          scopes: [],
+          lastUsed: isConnected ? new Date() : undefined,
         };
       })
     );
@@ -177,7 +177,7 @@ export function SettingsPanel() {
             const importedSettings = JSON.parse(e.target?.result as string);
             setSettings(importedSettings);
             alert('Settings imported successfully!');
-          } catch (error) {
+          } catch {
             alert('Error importing settings file');
           }
         };

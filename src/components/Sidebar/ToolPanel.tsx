@@ -1,6 +1,4 @@
-import React from 'react';
 import { 
-  Code, 
   Cloud, 
   Wrench, 
   ShoppingBag, 

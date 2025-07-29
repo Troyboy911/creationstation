@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { FileText, Search, Plus, Link, Tag, BookOpen } from 'lucide-react';
+import { useState } from 'react';
+import { Search, Plus, Link, Tag, BookOpen } from 'lucide-react';
 import { useWorkspace } from '../../contexts/WorkspaceContext';
 
 export function KnowledgePanel() {
