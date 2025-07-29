@@ -257,19 +257,139 @@ export function SettingsPanel() {
       {/* API Keys */}
       {activeTab === 'api' && (
         <div className="space-y-4">
-          <div className="space-y-3">
-            {Object.entries(settings.apiKeys).map(([service, key]) => (
-              <div key={service} className="space-y-2">
-                <label className="text-white font-medium capitalize">{service} API Key</label>
-                <input
-                  type="password"
-                  value={key}
-                  onChange={(e) => updateSetting('apiKeys', service, e.target.value)}
-                  placeholder={`Enter ${service} API key...`}
-                  className="w-full bg-gray-900 text-white rounded-lg px-3 py-2 text-sm border border-gray-700 focus:border-cyan-500 focus:outline-none transition-all duration-300"
-                />
+          {/* API Key Categories */}
+          <div className="space-y-4">
+            {/* AI & Development */}
+            <div className="bg-gray-800/30 rounded-lg p-4 border border-gray-700">
+              <h4 className="text-cyan-400 font-semibold mb-3 flex items-center gap-2">
+                <Key className="w-4 h-4" />
+                AI &amp; Development
+              </h4>
+              <div className="grid grid-cols-1 gap-3">
+                {['openai', 'github'].map((service) => (
+                  <div key={service} className="space-y-2">
+                    <label className="text-white font-medium capitalize">{service} API Key</label>
+                    <input
+                      type="password"
+                      value={settings.apiKeys[service as keyof typeof settings.apiKeys]}
+                      onChange={(e) => updateSetting('apiKeys', service, e.target.value)}
+                      placeholder={`Enter ${service} API key...`}
+                      className="w-full bg-gray-900 text-white rounded-lg px-3 py-2 text-sm border border-gray-700 focus:border-cyan-500 focus:outline-none transition-all duration-300"
+                    />
+                  </div>
+                ))}
               </div>
-            ))}
+            </div>
+
+            {/* Google Services */}
+            <div className="bg-gray-800/30 rounded-lg p-4 border border-gray-700">
+              <h4 className="text-blue-400 font-semibold mb-3 flex items-center gap-2">
+                <Key className="w-4 h-4" />
+                Google Services
+              </h4>
+              <div className="grid grid-cols-1 gap-3">
+                {['googleClientId', 'googleClientSecret', 'youtube'].map((service) => (
+                  <div key={service} className="space-y-2">
+                    <label className="text-white font-medium capitalize">{service.replace(/([A-Z])/g, ' $1').trim()}</label>
+                    <input
+                      type="password"
+                      value={settings.apiKeys[service as keyof typeof settings.apiKeys]}
+                      onChange={(e) => updateSetting('apiKeys', service, e.target.value)}
+                      placeholder={`Enter ${service.replace(/([A-Z])/g, ' $1').trim().toLowerCase()}...`}
+                      className="w-full bg-gray-900 text-white rounded-lg px-3 py-2 text-sm border border-gray-700 focus:border-cyan-500 focus:outline-none transition-all duration-300"
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Database Services */}
+            <div className="bg-gray-800/30 rounded-lg p-4 border border-gray-700">
+              <h4 className="text-green-400 font-semibold mb-3 flex items-center gap-2">
+                <Key className="w-4 h-4" />
+                Database Services
+              </h4>
+              <div className="grid grid-cols-1 gap-3">
+                {['firebase', 'supabaseUrl', 'supabaseKey', 'neonDbUrl', 'neonDbKey'].map((service) => (
+                  <div key={service} className="space-y-2">
+                    <label className="text-white font-medium capitalize">{service.replace(/([A-Z])/g, ' $1').trim()}</label>
+                    <input
+                      type="password"
+                      value={settings.apiKeys[service as keyof typeof settings.apiKeys]}
+                      onChange={(e) => updateSetting('apiKeys', service, e.target.value)}
+                      placeholder={`Enter ${service.replace(/([A-Z])/g, ' $1').trim().toLowerCase()}...`}
+                      className="w-full bg-gray-900 text-white rounded-lg px-3 py-2 text-sm border border-gray-700 focus:border-cyan-500 focus:outline-none transition-all duration-300"
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* E-commerce & Payment */}
+            <div className="bg-gray-800/30 rounded-lg p-4 border border-gray-700">
+              <h4 className="text-purple-400 font-semibold mb-3 flex items-center gap-2">
+                <Key className="w-4 h-4" />
+                E-commerce &amp; Payment
+              </h4>
+              <div className="grid grid-cols-1 gap-3">
+                {['stripe', 'shopifyApiKey', 'shopifyApiSecret', 'amazonAssociateTag', 'amazonApiKey', 'amazonSecret', 'printify'].map((service) => (
+                  <div key={service} className="space-y-2">
+                    <label className="text-white font-medium capitalize">{service.replace(/([A-Z])/g, ' $1').trim()}</label>
+                    <input
+                      type="password"
+                      value={settings.apiKeys[service as keyof typeof settings.apiKeys]}
+                      onChange={(e) => updateSetting('apiKeys', service, e.target.value)}
+                      placeholder={`Enter ${service.replace(/([A-Z])/g, ' $1').trim().toLowerCase()}...`}
+                      className="w-full bg-gray-900 text-white rounded-lg px-3 py-2 text-sm border border-gray-700 focus:border-cyan-500 focus:outline-none transition-all duration-300"
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Social & Marketing */}
+            <div className="bg-gray-800/30 rounded-lg p-4 border border-gray-700">
+              <h4 className="text-orange-400 font-semibold mb-3 flex items-center gap-2">
+                <Key className="w-4 h-4" />
+                Social &amp; Marketing
+              </h4>
+              <div className="grid grid-cols-1 gap-3">
+                {['facebookAppId', 'facebookAppSecret', 'metricool'].map((service) => (
+                  <div key={service} className="space-y-2">
+                    <label className="text-white font-medium capitalize">{service.replace(/([A-Z])/g, ' $1').trim()}</label>
+                    <input
+                      type="password"
+                      value={settings.apiKeys[service as keyof typeof settings.apiKeys]}
+                      onChange={(e) => updateSetting('apiKeys', service, e.target.value)}
+                      placeholder={`Enter ${service.replace(/([A-Z])/g, ' $1').trim().toLowerCase()}...`}
+                      className="w-full bg-gray-900 text-white rounded-lg px-3 py-2 text-sm border border-gray-700 focus:border-cyan-500 focus:outline-none transition-all duration-300"
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Deployment & Infrastructure */}
+            <div className="bg-gray-800/30 rounded-lg p-4 border border-gray-700">
+              <h4 className="text-pink-400 font-semibold mb-3 flex items-center gap-2">
+                <Key className="w-4 h-4" />
+                Deployment &amp; Infrastructure
+              </h4>
+              <div className="grid grid-cols-1 gap-3">
+                {['netlify'].map((service) => (
+                  <div key={service} className="space-y-2">
+                    <label className="text-white font-medium capitalize">{service} API Key</label>
+                    <input
+                      type="password"
+                      value={settings.apiKeys[service as keyof typeof settings.apiKeys]}
+                      onChange={(e) => updateSetting('apiKeys', service, e.target.value)}
+                      placeholder={`Enter ${service} API key...`}
+                      className="w-full bg-gray-900 text-white rounded-lg px-3 py-2 text-sm border border-gray-700 focus:border-cyan-500 focus:outline-none transition-all duration-300"
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
           
           <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-3">
@@ -278,7 +398,7 @@ export function SettingsPanel() {
               <span className="font-medium">Security Notice</span>
             </div>
             <p className="text-yellow-300/80 text-sm">
-              API keys are stored locally in your browser. Never share your keys with others.
+              API keys are stored locally in your browser. Enhanced encryption and secure vault features coming soon.
             </p>
           </div>
         </div>
