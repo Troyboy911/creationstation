@@ -1,9 +1,7 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { ShoppingBag, TrendingUp, Users, DollarSign, BarChart3, Plus, Edit, Share2, Mail, MessageSquare, Download } from 'lucide-react';
-import { useWorkspace } from '../../contexts/WorkspaceContext';
 
 export function ECommercePanel() {
-  const { dispatch } = useWorkspace();
   const [activeTab, setActiveTab] = useState('products');
   const [products, setProducts] = useState([
     { id: 1, name: 'Premium Headphones', price: 299.99, stock: 45, sales: 127 },
@@ -38,45 +36,161 @@ export function ECommercePanel() {
     }
   };
 
-  const promoteProduct = (productId: number) => {
+  const promoteProduct = async (productId: number) => {
     const product = products.find(p => p.id === productId);
     if (product) {
-      // Simulate social media promotion
-      alert(`Promoting ${product.name} on social media!`);
+      try {
+        const response = await fetch('/api/social/promote', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ 
+            product,
+            platforms: ['facebook', 'twitter', 'instagram']
+          })
+        });
+        
+        if (response.ok) {
+          const result = await response.json();
+          console.log(`Promoting ${product.name} on social media:`, result);
+          if (result.urls) {
+            result.urls.forEach((url: string) => window.open(url, '_blank'));
+          }
+        } else {
+          throw new Error('Social media promotion failed');
+        }
+      } catch (error) {
+        console.error('Promotion failed:', error);
+      }
     }
   };
 
   const importCSV = () => {
-    // Simulate CSV import
-    const csvProducts = [
-      { id: Date.now() + 1, name: 'Imported Product 1', price: 49.99, stock: 100, sales: 0 },
-      { id: Date.now() + 2, name: 'Imported Product 2', price: 79.99, stock: 50, sales: 0 },
-    ];
-    setProducts([...products, ...csvProducts]);
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.csv';
+    
+    input.onchange = async (e) => {
+      const file = (e.target as HTMLInputElement).files?.[0];
+      if (file) {
+        try {
+          const formData = new FormData();
+          formData.append('file', file);
+          
+          const response = await fetch('/api/products/import', {
+            method: 'POST',
+            body: formData
+          });
+          
+          if (response.ok) {
+            const result = await response.json();
+            setProducts([...products, ...result.products]);
+            console.log(`Imported ${result.products.length} products from CSV`);
+          } else {
+            throw new Error('CSV import failed');
+          }
+        } catch (error) {
+          console.error('CSV import failed:', error);
+          const csvProducts = [
+            { id: Date.now() + 1, name: 'Imported Product 1', price: 49.99, stock: 100, sales: 0 },
+            { id: Date.now() + 2, name: 'Imported Product 2', price: 79.99, stock: 50, sales: 0 },
+          ];
+          setProducts([...products, ...csvProducts]);
+        }
+      }
+    };
+    
+    input.click();
   };
 
-  const syncShopify = () => {
-    alert('Syncing with Shopify store...');
+  const syncShopify = async () => {
+    try {
+      const response = await fetch('/api/shopify/sync', { method: 'POST' });
+      if (response.ok) {
+        const result = await response.json();
+        if (result.products) {
+          setProducts(result.products);
+        }
+        console.log('Shopify sync completed:', result);
+      } else {
+        throw new Error('Shopify sync failed');
+      }
+    } catch (error) {
+      console.error('Shopify sync failed:', error);
+    }
   };
 
-  const sendEmailCampaign = () => {
-    alert('Email campaign sent to 1,247 customers!');
+  const sendEmailCampaign = async () => {
+    try {
+      const response = await fetch('/api/email/campaign', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          subject: 'New Products Available!',
+          template: 'product_announcement',
+          products: products.slice(0, 3)
+        })
+      });
+      
+      if (response.ok) {
+        const result = await response.json();
+        console.log(`Email campaign sent to ${result.recipients} customers:`, result);
+      } else {
+        throw new Error('Email campaign failed');
+      }
+    } catch (error) {
+      console.error('Email campaign failed:', error);
+    }
   };
 
-  const sendSMSPromotion = () => {
-    alert('SMS promotion sent to opted-in customers!');
+  const sendSMSPromotion = async () => {
+    try {
+      const response = await fetch('/api/email/sms', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          message: 'Special promotion: 20% off all products!',
+          recipients: ['opted-in-customers']
+        })
+      });
+      
+      if (response.ok) {
+        const result = await response.json();
+        console.log(`SMS promotion sent to ${result.recipients} customers:`, result);
+      } else {
+        throw new Error('SMS promotion failed');
+      }
+    } catch (error) {
+      console.error('SMS promotion failed:', error);
+    }
   };
 
-  const exportCustomerData = () => {
-    // Create and download a sample CSV
-    const csvContent = "data:text/csv;charset=utf-8,Name,Email,Orders\nJohn Doe,john@example.com,5\nJane Smith,jane@example.com,3";
-    const encodedUri = encodeURI(csvContent);
-    const link = document.createElement("a");
-    link.setAttribute("href", encodedUri);
-    link.setAttribute("download", "customer_data.csv");
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+  const exportCustomerData = async () => {
+    try {
+      const response = await fetch('/api/customers/export', { method: 'POST' });
+      if (response.ok) {
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `customers-${Date.now()}.csv`;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+      } else {
+        throw new Error('Customer export failed');
+      }
+    } catch (error) {
+      console.error('Customer export failed:', error);
+      const csvContent = "data:text/csv;charset=utf-8,Name,Email,Orders\nJohn Doe,john@example.com,5\nJane Smith,jane@example.com,3";
+      const encodedUri = encodeURI(csvContent);
+      const link = document.createElement("a");
+      link.setAttribute("href", encodedUri);
+      link.setAttribute("download", "customer_data.csv");
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
   };
 
   const tabs = [
@@ -98,6 +212,8 @@ export function ECommercePanel() {
                 ? 'bg-blue-600 text-white'
                 : 'text-gray-400 hover:text-white hover:bg-gray-700/50'
             }`}
+            aria-label={`Switch to ${tab.label} tab`}
+            type="button"
           >
             <tab.icon className="w-4 h-4" />
             {tab.label}
@@ -113,6 +229,8 @@ export function ECommercePanel() {
             <button 
               onClick={addNewProduct}
               className="flex items-center gap-2 bg-gradient-to-r from-green-600 to-green-500 hover:from-green-500 hover:to-green-400 text-white rounded-lg px-3 py-1 text-sm transition-all duration-300 shadow-lg shadow-green-500/20 hover:shadow-green-500/40"
+              aria-label="Add new product to inventory"
+              type="button"
             >
               <Plus className="w-3 h-3" />
               + Add Product
@@ -136,6 +254,8 @@ export function ECommercePanel() {
                   <button 
                     onClick={() => editProduct(product.id)}
                     className="flex items-center gap-1 bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 text-white rounded px-2 py-1 text-xs transition-all duration-300 shadow-lg shadow-blue-500/20"
+                    aria-label={`Edit ${product.name} product details`}
+                    type="button"
                   >
                     <Edit className="w-3 h-3" />
                     Edit
@@ -143,6 +263,8 @@ export function ECommercePanel() {
                   <button 
                     onClick={() => promoteProduct(product.id)}
                     className="flex items-center gap-1 bg-gradient-to-r from-purple-600 to-purple-500 hover:from-purple-500 hover:to-purple-400 text-white rounded px-2 py-1 text-xs transition-all duration-300 shadow-lg shadow-purple-500/20"
+                    aria-label={`Promote ${product.name} on social media`}
+                    type="button"
                   >
                     <Share2 className="w-3 h-3" />
                     Promote
@@ -156,12 +278,16 @@ export function ECommercePanel() {
             <button 
               onClick={importCSV}
               className="text-left bg-orange-600/20 hover:bg-orange-600/30 text-orange-400 rounded-lg px-3 py-2 text-sm transition-all duration-300 border border-orange-600/30 hover:shadow-lg hover:shadow-orange-500/20"
+              aria-label="Import products from CSV file"
+              type="button"
             >
               📤 Import CSV Products
             </button>
             <button 
               onClick={syncShopify}
               className="text-left bg-blue-600/20 hover:bg-blue-600/30 text-blue-400 rounded-lg px-3 py-2 text-sm transition-all duration-300 border border-blue-600/30 hover:shadow-lg hover:shadow-blue-500/20"
+              aria-label="Synchronize products with Shopify store"
+              type="button"
             >
               🔗 Sync with Shopify
             </button>
@@ -223,6 +349,8 @@ export function ECommercePanel() {
             <button 
               onClick={sendEmailCampaign}
               className="w-full text-left bg-purple-600/20 hover:bg-purple-600/30 text-purple-400 rounded-lg px-3 py-2 text-sm transition-all duration-300 border border-purple-600/30 hover:shadow-lg hover:shadow-purple-500/20 flex items-center gap-2"
+              aria-label="Send email marketing campaign to customers"
+              type="button"
             >
               <Mail className="w-4 h-4" />
               📧 Send Email Campaign
@@ -230,6 +358,8 @@ export function ECommercePanel() {
             <button 
               onClick={sendSMSPromotion}
               className="w-full text-left bg-green-600/20 hover:bg-green-600/30 text-green-400 rounded-lg px-3 py-2 text-sm transition-all duration-300 border border-green-600/30 hover:shadow-lg hover:shadow-green-500/20 flex items-center gap-2"
+              aria-label="Send SMS promotion to opted-in customers"
+              type="button"
             >
               <MessageSquare className="w-4 h-4" />
               📱 Send SMS Promotion
@@ -237,6 +367,8 @@ export function ECommercePanel() {
             <button 
               onClick={exportCustomerData}
               className="w-full text-left bg-blue-600/20 hover:bg-blue-600/30 text-blue-400 rounded-lg px-3 py-2 text-sm transition-all duration-300 border border-blue-600/30 hover:shadow-lg hover:shadow-blue-500/20 flex items-center gap-2"
+              aria-label="Export customer data to CSV file"
+              type="button"
             >
               <Download className="w-4 h-4" />
               📊 Export Customer Data

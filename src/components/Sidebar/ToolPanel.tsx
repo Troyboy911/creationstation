@@ -1,6 +1,4 @@
-import React from 'react';
 import { 
-  Code, 
   Cloud, 
   Wrench, 
   ShoppingBag, 
@@ -33,7 +31,11 @@ export function ToolPanel() {
     dispatch({ type: 'TOGGLE_PANEL', payload: 'settings' });
   };
   return (
-    <div className="w-16 bg-gradient-to-b from-gray-900/95 via-black/90 to-gray-900/95 backdrop-blur-xl border-r border-cyan-500/20 flex flex-col items-center py-4 space-y-2 shadow-2xl shadow-cyan-500/10">
+    <aside 
+      className="w-16 bg-gradient-to-b from-gray-900/95 via-black/90 to-gray-900/95 backdrop-blur-xl border-r border-cyan-500/20 flex flex-col items-center py-4 space-y-2 shadow-2xl shadow-cyan-500/10"
+      role="complementary"
+      aria-label="Tool panel"
+    >
       {/* Arc Reactor Style Glow */}
       <div className="absolute inset-0 bg-gradient-to-b from-cyan-500/5 via-transparent to-blue-500/5 pointer-events-none" />
       
@@ -50,6 +52,8 @@ export function ToolPanel() {
                 : 'bg-gray-800/50 text-gray-400 hover:bg-gradient-to-br hover:from-cyan-500/20 hover:to-blue-500/20 hover:text-cyan-300 hover:shadow-lg hover:shadow-cyan-500/20 border border-gray-700/50 hover:border-cyan-400/30'
             }`}
             title={tool.label}
+            aria-label={`${isActive ? 'Close' : 'Open'} ${tool.label} panel`}
+            type="button"
           >
             <tool.icon className="w-5 h-5" />
             
@@ -77,6 +81,9 @@ export function ToolPanel() {
       <button 
         onClick={handleSettingsClick}
         className="w-12 h-12 rounded-lg flex items-center justify-center bg-gray-800/50 text-gray-400 hover:bg-gradient-to-br hover:from-cyan-500/20 hover:to-blue-500/20 hover:text-cyan-300 hover:shadow-lg hover:shadow-cyan-500/20 border border-gray-700/50 hover:border-cyan-400/30 transition-all duration-300 group transform hover:scale-110"
+        aria-label="Open settings panel"
+        title="Settings"
+        type="button"
       >
         <Settings className="w-5 h-5" />
         <div className="absolute left-full ml-3 bg-gray-900/95 backdrop-blur-sm border border-cyan-400/30 text-cyan-300 text-xs rounded-lg px-3 py-2 opacity-0 group-hover:opacity-100 transition-all duration-300 whitespace-nowrap pointer-events-none shadow-lg shadow-cyan-500/20">
@@ -84,6 +91,6 @@ export function ToolPanel() {
           <div className="absolute left-0 top-1/2 transform -translate-y-1/2 -translate-x-1 w-2 h-2 bg-gray-900 border-l border-t border-cyan-400/30 rotate-45" />
         </div>
       </button>
-    </div>
+    </aside>
   );
 }

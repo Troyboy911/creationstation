@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { FileText, Search, Plus, Link, Tag, BookOpen } from 'lucide-react';
+import { useState } from 'react';
+import { Search, Plus, Link, Tag, BookOpen } from 'lucide-react';
 import { useWorkspace } from '../../contexts/WorkspaceContext';
 
 export function KnowledgePanel() {
@@ -40,21 +40,57 @@ export function KnowledgePanel() {
     }
   };
 
-  const connectToTana = () => {
-    alert('Connecting to Tana workspace...\nIntegration will be available soon!');
+  const connectToTana = async () => {
+    try {
+      const response = await fetch('/api/integrations/tana/connect', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ workspace: 'default' })
+      });
+      
+      if (response.ok) {
+        const result = await response.json();
+        console.log('Tana workspace connected:', result);
+        if (result.authUrl) {
+          window.open(result.authUrl, '_blank');
+        }
+      } else {
+        throw new Error('Tana connection failed');
+      }
+    } catch (error) {
+      console.error('Tana connection failed:', error);
+    }
   };
 
-  const exportKnowledge = () => {
-    const exportData = JSON.stringify(notes, null, 2);
-    const blob = new Blob([exportData], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = 'knowledge-export.json';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
+  const exportKnowledge = async () => {
+    try {
+      const response = await fetch('/api/knowledge/export', { method: 'POST' });
+      if (response.ok) {
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `knowledge-base-${Date.now()}.md`;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+      } else {
+        throw new Error('Knowledge export failed');
+      }
+    } catch (error) {
+      console.error('Knowledge export failed:', error);
+      const exportData = JSON.stringify(notes, null, 2);
+      const blob = new Blob([exportData], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = 'knowledge-export.json';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    }
   };
 
   const filteredNotes = notes.filter(note =>
@@ -85,6 +121,7 @@ export function KnowledgePanel() {
           onChange={(e) => setSearchQuery(e.target.value)}
           placeholder="Search knowledge base..."
           className="w-full bg-gray-900 text-white rounded-lg pl-10 pr-3 py-2 text-sm border border-gray-700 focus:border-yellow-500 focus:outline-none transition-all duration-300"
+          aria-label="Search knowledge base"
         />
       </div>
 
@@ -97,11 +134,14 @@ export function KnowledgePanel() {
           placeholder="New note title..."
           className="flex-1 bg-gray-900 text-white rounded-lg px-3 py-2 text-sm border border-gray-700 focus:border-yellow-500 focus:outline-none transition-all duration-300"
           onKeyPress={(e) => e.key === 'Enter' && createNewNote()}
+          aria-label="New note title"
         />
         <button
           onClick={createNewNote}
           disabled={!newNoteTitle.trim()}
           className="bg-gradient-to-r from-yellow-600 to-orange-600 hover:from-yellow-500 hover:to-orange-500 disabled:from-gray-700 disabled:to-gray-600 text-white rounded-lg px-3 py-2 text-sm transition-all duration-300 shadow-lg shadow-yellow-500/20"
+          aria-label="Create new note"
+          type="button"
         >
           <Plus className="w-4 h-4" />
         </button>
@@ -154,12 +194,16 @@ export function KnowledgePanel() {
         <button
           onClick={connectToTana}
           className="w-full text-left bg-purple-600/20 hover:bg-purple-600/30 text-purple-400 rounded-lg px-3 py-2 text-sm transition-all duration-300 border border-purple-600/30 hover:shadow-lg hover:shadow-purple-500/20"
+          aria-label="Connect to Tana knowledge management platform"
+          type="button"
         >
           🧠 Connect to Tana
         </button>
         <button
           onClick={exportKnowledge}
           className="w-full text-left bg-blue-600/20 hover:bg-blue-600/30 text-blue-400 rounded-lg px-3 py-2 text-sm transition-all duration-300 border border-blue-600/30 hover:shadow-lg hover:shadow-blue-500/20"
+          aria-label="Export knowledge base to JSON file"
+          type="button"
         >
           📤 Export Knowledge Base
         </button>

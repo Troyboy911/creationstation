@@ -60,18 +60,58 @@ export function DeskCanvas() {
     }
   };
 
-  const handleFileClick = (fileId: string, e: React.MouseEvent) => {
+  const handleFileClick = async (fileId: string, e: React.MouseEvent) => {
     e.stopPropagation();
     const file = state.files.find(f => f.id === fileId);
     if (file) {
       if (file.type === 'code' && file.content) {
-        // Show code content in a modal or editor
-        alert(`Opening ${file.name}:\n\n${file.content.substring(0, 200)}...`);
+        try {
+          const response = await fetch('/api/vscode/open', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+              fileName: file.name, 
+              content: file.content,
+              path: file.path || `/tmp/${file.name}`
+            })
+          });
+          
+          if (response.ok) {
+            const result = await response.json();
+            if (result.url) {
+              window.open(result.url, '_blank');
+            }
+          } else {
+            throw new Error('VS Code integration failed');
+          }
+        } catch (error) {
+          console.error('Failed to open in VS Code:', error);
+          const blob = new Blob([file.content], { type: 'text/plain' });
+          const url = URL.createObjectURL(blob);
+          window.open(url, '_blank');
+          setTimeout(() => URL.revokeObjectURL(url), 1000);
+        }
       } else if (file.type === 'image' && file.url) {
-        // Open image in new tab
         window.open(file.url, '_blank');
       } else {
-        alert(`Opening ${file.name}`);
+        try {
+          const response = await fetch('/api/files/open', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ fileName: file.name, path: file.path })
+          });
+          
+          if (response.ok) {
+            const result = await response.json();
+            if (result.url) {
+              window.open(result.url, '_blank');
+            }
+          } else {
+            throw new Error('File open failed');
+          }
+        } catch (error) {
+          console.error('Failed to open file:', error);
+        }
       }
     }
   };
@@ -136,15 +176,17 @@ export function DeskCanvas() {
               <FileIcon className="w-20 h-20 text-cyan-400/60 mx-auto" />
               <div className="absolute inset-0 w-20 h-20 mx-auto border-2 border-cyan-400/30 rounded-full animate-ping" />
             </div>
-            <h3 className="text-xl font-medium text-cyan-300/80 mb-2">
-              Drag & Drop Files Here
-            </h3>
-            <p className="text-gray-400/80">
-              Drop code files, images, videos, or documents onto your workspace
-            </p>
-            <div className="mt-4 flex justify-center">
-              <div className="px-4 py-2 bg-gradient-to-r from-cyan-500/10 to-blue-500/10 border border-cyan-400/20 rounded-lg text-cyan-400/60 text-sm">
-                Holographic Workspace Active
+            <div className="text-center">
+              <h3 className="text-xl font-medium text-cyan-300/80 mb-2">
+                Drag & Drop Files Here
+              </h3>
+              <p className="text-gray-400/80">
+                Drop code files, images, videos, or documents onto your workspace
+              </p>
+              <div className="mt-4 flex justify-center">
+                <div className="px-4 py-2 bg-gradient-to-r from-cyan-500/10 to-blue-500/10 border border-cyan-400/20 rounded-lg text-cyan-400/60 text-sm">
+                  Holographic Workspace Active
+                </div>
               </div>
             </div>
           </div>

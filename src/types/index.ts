@@ -1,9 +1,14 @@
 export interface Project {
   id: string;
   name: string;
-  type: 'react' | 'vue' | 'flutter' | 'shopify' | 'blank';
+  description?: string;
+  type?: 'react' | 'vue' | 'flutter' | 'shopify' | 'blank';
+  template?: string;
   lastModified: Date;
-  status: 'active' | 'paused' | 'completed';
+  createdAt?: Date;
+  status?: 'active' | 'paused' | 'completed';
+  files?: FileItem[];
+  settings?: Record<string, unknown>;
 }
 
 export interface FileItem {
@@ -13,7 +18,9 @@ export interface FileItem {
   content?: string;
   url?: string;
   size?: number;
+  path?: string;
   position: { x: number; y: number };
+  metadata?: Record<string, unknown>;
 }
 
 export interface AutomationRecipe {
@@ -39,4 +46,88 @@ export interface Panel {
   isOpen: boolean;
   position: { x: number; y: number };
   size: { width: number; height: number };
+}
+
+export interface Product {
+  id: string | number;
+  name: string;
+  description?: string;
+  price?: number;
+  category?: string;
+  imageUrl?: string;
+  status?: 'active' | 'inactive' | 'draft';
+}
+
+export interface DockerOptions {
+  image?: string;
+  tag?: string;
+  ports?: string[];
+  volumes?: string[];
+  environment?: Record<string, string>;
+}
+
+export interface APIResponse<T = unknown> {
+  success: boolean;
+  data?: T;
+  message?: string;
+  error?: string;
+  url?: string;
+  imageId?: string;
+  commitId?: string;
+  backupId?: string;
+  downloadUrl?: string;
+  syncedItems?: number;
+  urls?: string[];
+  products?: unknown[];
+  recipients?: number;
+  campaignId?: string;
+  messageId?: string;
+  result?: unknown;
+  status?: string;
+  logs?: string[];
+  files?: FileItem[];
+  content?: string;
+  path?: string;
+  projectId?: string;
+  branches?: unknown[];
+  tables?: unknown[];
+  schemas?: unknown[];
+  rows?: unknown[];
+  query?: string;
+  execution_time?: number;
+  imageUrl?: string;
+  videoUrl?: string;
+  prompt?: string;
+  project?: Project;
+  repoUrl?: string;
+  authUrl?: string;
+  executionId?: string;
+  duration?: string;
+}
+
+export interface MCPArgs {
+  [key: string]: unknown;
+}
+
+export interface AuthError {
+  message: string;
+  code?: string;
+}
+
+export interface ProjectData {
+  project?: {
+    name?: string;
+  };
+}
+
+export interface RepoData {
+  repoUrl?: string;
+}
+
+export interface PromptData {
+  prompt?: string;
+}
+
+export interface PathData {
+  path?: string;
 }

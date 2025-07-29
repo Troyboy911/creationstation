@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useReducer, ReactNode } from 'react';
+import React, { createContext, useContext, useReducer, ReactNode, useEffect } from 'react';
 import { Project, FileItem, Panel, APIConnection } from '../types';
 
 interface WorkspaceState {
@@ -15,23 +15,25 @@ type WorkspaceAction =
   | { type: 'ADD_FILE'; payload: FileItem }
   | { type: 'REMOVE_FILE'; payload: string }
   | { type: 'UPDATE_FILE_POSITION'; payload: { id: string; position: { x: number; y: number } } }
+  | { type: 'UPDATE_PANEL_POSITION'; payload: { id: string; position: { x: number; y: number } } }
   | { type: 'TOGGLE_PANEL'; payload: string }
   | { type: 'SET_DRAGGING'; payload: boolean }
-  | { type: 'ADD_PROJECT'; payload: Project };
+  | { type: 'ADD_PROJECT'; payload: Project }
+  | { type: 'UPDATE_API_CONNECTIONS'; payload: APIConnection[] };
 
 const initialState: WorkspaceState = {
   currentProject: null,
   projects: [],
   files: [],
   panels: [
-    { id: 'ai-code', title: 'AI & Code', category: 'ai-code', isOpen: true, position: { x: 20, y: 120 }, size: { width: 300, height: 400 } },
-    { id: 'cloud-storage', title: 'Cloud & Storage', category: 'cloud-storage', isOpen: false, position: { x: 340, y: 120 }, size: { width: 300, height: 400 } },
-    { id: 'dev-tools', title: 'Dev Tools', category: 'dev-tools', isOpen: false, position: { x: 660, y: 120 }, size: { width: 300, height: 400 } },
-    { id: 'ecommerce', title: 'E-Commerce', category: 'ecommerce', isOpen: false, position: { x: 980, y: 120 }, size: { width: 300, height: 400 } },
-    { id: 'automations', title: 'Automation Center', category: 'ai-code', isOpen: false, position: { x: 1300, y: 120 }, size: { width: 350, height: 500 } },
-    { id: 'no-code', title: 'No-Code Tools', category: 'no-code', isOpen: false, position: { x: 20, y: 540 }, size: { width: 320, height: 450 } },
-    { id: 'knowledge', title: 'Knowledge Base', category: 'knowledge', isOpen: false, position: { x: 360, y: 540 }, size: { width: 320, height: 450 } },
-    { id: 'settings', title: 'System Settings', category: 'ai-code', isOpen: false, position: { x: 700, y: 540 }, size: { width: 400, height: 500 } },
+    { id: 'ai-code', title: 'AI & Code', category: 'ai-code', isOpen: true, position: { x: 100, y: 120 }, size: { width: 300, height: 400 } },
+    { id: 'cloud-storage', title: 'Cloud & Storage', category: 'cloud-storage', isOpen: false, position: { x: 120, y: 140 }, size: { width: 300, height: 400 } },
+    { id: 'dev-tools', title: 'Dev Tools', category: 'dev-tools', isOpen: false, position: { x: 140, y: 160 }, size: { width: 300, height: 400 } },
+    { id: 'ecommerce', title: 'E-Commerce', category: 'ecommerce', isOpen: false, position: { x: 160, y: 180 }, size: { width: 300, height: 400 } },
+    { id: 'automations', title: 'Automation Center', category: 'ai-code', isOpen: false, position: { x: 180, y: 200 }, size: { width: 350, height: 500 } },
+    { id: 'no-code', title: 'No-Code Tools', category: 'no-code', isOpen: false, position: { x: 200, y: 220 }, size: { width: 320, height: 450 } },
+    { id: 'knowledge', title: 'Knowledge Base', category: 'knowledge', isOpen: false, position: { x: 220, y: 240 }, size: { width: 320, height: 450 } },
+    { id: 'settings', title: 'System Settings', category: 'ai-code', isOpen: false, position: { x: 240, y: 260 }, size: { width: 400, height: 500 } },
   ],
   apiConnections: [
     { service: 'OpenAI', status: 'disconnected', scopes: ['chat', 'completion'] },
@@ -59,6 +61,15 @@ function workspaceReducer(state: WorkspaceState, action: WorkspaceAction): Works
             : f
         )
       };
+    case 'UPDATE_PANEL_POSITION':
+      return {
+        ...state,
+        panels: state.panels.map(p => 
+          p.id === action.payload.id 
+            ? { ...p, position: action.payload.position }
+            : p
+        )
+      };
     case 'TOGGLE_PANEL':
       return {
         ...state,
@@ -72,6 +83,8 @@ function workspaceReducer(state: WorkspaceState, action: WorkspaceAction): Works
       return { ...state, isDragging: action.payload };
     case 'ADD_PROJECT':
       return { ...state, projects: [...state.projects, action.payload] };
+    case 'UPDATE_API_CONNECTIONS':
+      return { ...state, apiConnections: action.payload };
     default:
       return state;
   }
@@ -84,6 +97,20 @@ const WorkspaceContext = createContext<{
 
 export function WorkspaceProvider({ children }: { children: ReactNode }) {
   const [state, dispatch] = useReducer(workspaceReducer, initialState);
+
+  useEffect(() => {
+    const savedProjects = localStorage.getItem('creation-station-projects');
+    if (savedProjects) {
+      try {
+        const projects = JSON.parse(savedProjects);
+        projects.forEach((project: Project) => {
+          dispatch({ type: 'ADD_PROJECT', payload: project });
+        });
+      } catch (error) {
+        console.warn('Could not load saved projects:', error);
+      }
+    }
+  }, []);
 
   return (
     <WorkspaceContext.Provider value={{ state, dispatch }}>
