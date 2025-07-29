@@ -1,10 +1,19 @@
-import React, { useState } from 'react';
-import { Settings, Key, Palette, Monitor, Bell, Shield, Database, Wifi } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Settings, Key, Palette, Monitor, Shield, Download, Upload, Copy, Lock, Unlock } from 'lucide-react';
 import { useWorkspace } from '../../contexts/WorkspaceContext';
+import { UniversalAPIKeyManager } from '../../utils/apiKeyManager';
+import { EnvironmentInjector } from '../../utils/envInjector';
 
 export function SettingsPanel() {
   const { state } = useWorkspace();
   const [activeTab, setActiveTab] = useState('general');
+  const [keyManager] = useState(() => UniversalAPIKeyManager.getInstance());
+  const [envInjector] = useState(() => new EnvironmentInjector());
+  const [isEncrypted, setIsEncrypted] = useState(false);
+  const [showEncryptionDialog, setShowEncryptionDialog] = useState(false);
+  const [encryptionPassword, setEncryptionPassword] = useState('');
+  const [vaultStats, setVaultStats] = useState(() => UniversalAPIKeyManager.getInstance().getVaultStats());
+  
   const [settings, setSettings] = useState({
     theme: 'dark',
     autoSave: true,
@@ -14,9 +23,26 @@ export function SettingsPanel() {
     gridSnap: false,
     apiKeys: {
       openai: '',
-      github: '',
       firebase: '',
-      shopify: '',
+      googleClientId: '',
+      googleClientSecret: '',
+      github: '',
+      netlify: '',
+      stripe: '',
+      metricool: '',
+      supabaseUrl: '',
+      supabaseKey: '',
+      neonDbUrl: '',
+      neonDbKey: '',
+      facebookAppId: '',
+      facebookAppSecret: '',
+      shopifyApiKey: '',
+      shopifyApiSecret: '',
+      amazonAssociateTag: '',
+      amazonApiKey: '',
+      amazonSecret: '',
+      youtube: '',
+      printify: '',
     },
     workspace: {
       defaultPanelSize: 'medium',
@@ -32,14 +58,39 @@ export function SettingsPanel() {
     { id: 'workspace', label: 'Workspace', icon: Monitor },
   ];
 
-  const updateSetting = (category: string, key: string, value: any) => {
+  useEffect(() => {
+    const loadedKeys = keyManager.getAllKeys();
     setSettings(prev => ({
       ...prev,
-      [category]: {
-        ...prev[category as keyof typeof prev],
-        [key]: value
+      apiKeys: {
+        ...prev.apiKeys,
+        ...loadedKeys
       }
     }));
+    setVaultStats(keyManager.getVaultStats());
+    setIsEncrypted(keyManager.getVaultStats().encryptionEnabled);
+  }, [keyManager]);
+
+  const updateSetting = (category: string, key: string, value: any) => {
+    if (category === 'apiKeys') {
+      keyManager.setAPIKey(key, value);
+      setVaultStats(keyManager.getVaultStats());
+    }
+    
+    if (category === '') {
+      setSettings(prev => ({
+        ...prev,
+        [key]: value
+      }));
+    } else {
+      setSettings(prev => ({
+        ...prev,
+        [category]: {
+          ...(prev[category as keyof typeof prev] as object),
+          [key]: value
+        }
+      }));
+    }
   };
 
   const saveSettings = () => {
@@ -58,9 +109,26 @@ export function SettingsPanel() {
         gridSnap: false,
         apiKeys: {
           openai: '',
-          github: '',
           firebase: '',
-          shopify: '',
+          googleClientId: '',
+          googleClientSecret: '',
+          github: '',
+          netlify: '',
+          stripe: '',
+          metricool: '',
+          supabaseUrl: '',
+          supabaseKey: '',
+          neonDbUrl: '',
+          neonDbKey: '',
+          facebookAppId: '',
+          facebookAppSecret: '',
+          shopifyApiKey: '',
+          shopifyApiSecret: '',
+          amazonAssociateTag: '',
+          amazonApiKey: '',
+          amazonSecret: '',
+          youtube: '',
+          printify: '',
         },
         workspace: {
           defaultPanelSize: 'medium',
@@ -105,6 +173,87 @@ export function SettingsPanel() {
       }
     };
     input.click();
+  };
+
+  const handleEncryption = () => {
+    if (isEncrypted) {
+      const success = keyManager.disableEncryption(encryptionPassword);
+      if (success) {
+        setIsEncrypted(false);
+        setShowEncryptionDialog(false);
+        setEncryptionPassword('');
+        setVaultStats(keyManager.getVaultStats());
+        alert('Encryption disabled successfully!');
+      } else {
+        alert('Invalid password!');
+      }
+    } else {
+      if (encryptionPassword.length < 8) {
+        alert('Password must be at least 8 characters long');
+        return;
+      }
+      keyManager.enableEncryption(encryptionPassword);
+      setIsEncrypted(true);
+      setShowEncryptionDialog(false);
+      setEncryptionPassword('');
+      setVaultStats(keyManager.getVaultStats());
+      alert('Encryption enabled successfully!');
+    }
+  };
+
+  const exportVault = () => {
+    const vaultData = keyManager.exportVault();
+    const blob = new Blob([vaultData], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `api-keys-backup-${new Date().toISOString().split('T')[0]}.json`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
+  const importVault = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const content = e.target?.result as string;
+        const success = keyManager.importVault(content);
+        if (success) {
+          const loadedKeys = keyManager.getAllKeys();
+          setSettings(prev => ({
+            ...prev,
+            apiKeys: {
+              ...prev.apiKeys,
+              ...loadedKeys
+            }
+          }));
+          setVaultStats(keyManager.getVaultStats());
+          setIsEncrypted(keyManager.getVaultStats().encryptionEnabled);
+          alert('Vault imported successfully!');
+        } else {
+          alert('Failed to import vault. Please check the file format.');
+        }
+      };
+      reader.readAsText(file);
+    }
+  };
+
+  const generateEnvFile = () => {
+    const envContent = keyManager.generateEnvFile();
+    envInjector.downloadEnvFile(envContent, '.env');
+  };
+
+  const copyEnvToClipboard = async () => {
+    const envContent = keyManager.generateEnvFile();
+    const success = await envInjector.copyToClipboard(envContent);
+    if (success) {
+      alert('Environment variables copied to clipboard!');
+    } else {
+      alert('Failed to copy to clipboard');
+    }
   };
 
   return (
@@ -216,28 +365,221 @@ export function SettingsPanel() {
       {/* API Keys */}
       {activeTab === 'api' && (
         <div className="space-y-4">
-          <div className="space-y-3">
-            {Object.entries(settings.apiKeys).map(([service, key]) => (
-              <div key={service} className="space-y-2">
-                <label className="text-white font-medium capitalize">{service} API Key</label>
-                <input
-                  type="password"
-                  value={key}
-                  onChange={(e) => updateSetting('apiKeys', service, e.target.value)}
-                  placeholder={`Enter ${service} API key...`}
-                  className="w-full bg-gray-900 text-white rounded-lg px-3 py-2 text-sm border border-gray-700 focus:border-cyan-500 focus:outline-none transition-all duration-300"
-                />
+          {/* API Key Categories */}
+          <div className="space-y-4">
+            {/* AI & Development */}
+            <div className="bg-gray-800/30 rounded-lg p-4 border border-gray-700">
+              <h4 className="text-cyan-400 font-semibold mb-3 flex items-center gap-2">
+                <Key className="w-4 h-4" />
+                AI &amp; Development
+              </h4>
+              <div className="grid grid-cols-1 gap-3">
+                {['openai', 'github'].map((service) => (
+                  <div key={service} className="space-y-2">
+                    <label className="text-white font-medium capitalize">{service} API Key</label>
+                    <input
+                      type="password"
+                      value={settings.apiKeys[service as keyof typeof settings.apiKeys]}
+                      onChange={(e) => updateSetting('apiKeys', service, e.target.value)}
+                      placeholder={`Enter ${service} API key...`}
+                      className="w-full bg-gray-900 text-white rounded-lg px-3 py-2 text-sm border border-gray-700 focus:border-cyan-500 focus:outline-none transition-all duration-300"
+                    />
+                  </div>
+                ))}
               </div>
-            ))}
+            </div>
+
+            {/* Google Services */}
+            <div className="bg-gray-800/30 rounded-lg p-4 border border-gray-700">
+              <h4 className="text-blue-400 font-semibold mb-3 flex items-center gap-2">
+                <Key className="w-4 h-4" />
+                Google Services
+              </h4>
+              <div className="grid grid-cols-1 gap-3">
+                {['googleClientId', 'googleClientSecret', 'youtube'].map((service) => (
+                  <div key={service} className="space-y-2">
+                    <label className="text-white font-medium capitalize">{service.replace(/([A-Z])/g, ' $1').trim()}</label>
+                    <input
+                      type="password"
+                      value={settings.apiKeys[service as keyof typeof settings.apiKeys]}
+                      onChange={(e) => updateSetting('apiKeys', service, e.target.value)}
+                      placeholder={`Enter ${service.replace(/([A-Z])/g, ' $1').trim().toLowerCase()}...`}
+                      className="w-full bg-gray-900 text-white rounded-lg px-3 py-2 text-sm border border-gray-700 focus:border-cyan-500 focus:outline-none transition-all duration-300"
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Database Services */}
+            <div className="bg-gray-800/30 rounded-lg p-4 border border-gray-700">
+              <h4 className="text-green-400 font-semibold mb-3 flex items-center gap-2">
+                <Key className="w-4 h-4" />
+                Database Services
+              </h4>
+              <div className="grid grid-cols-1 gap-3">
+                {['firebase', 'supabaseUrl', 'supabaseKey', 'neonDbUrl', 'neonDbKey'].map((service) => (
+                  <div key={service} className="space-y-2">
+                    <label className="text-white font-medium capitalize">{service.replace(/([A-Z])/g, ' $1').trim()}</label>
+                    <input
+                      type="password"
+                      value={settings.apiKeys[service as keyof typeof settings.apiKeys]}
+                      onChange={(e) => updateSetting('apiKeys', service, e.target.value)}
+                      placeholder={`Enter ${service.replace(/([A-Z])/g, ' $1').trim().toLowerCase()}...`}
+                      className="w-full bg-gray-900 text-white rounded-lg px-3 py-2 text-sm border border-gray-700 focus:border-cyan-500 focus:outline-none transition-all duration-300"
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* E-commerce & Payment */}
+            <div className="bg-gray-800/30 rounded-lg p-4 border border-gray-700">
+              <h4 className="text-purple-400 font-semibold mb-3 flex items-center gap-2">
+                <Key className="w-4 h-4" />
+                E-commerce &amp; Payment
+              </h4>
+              <div className="grid grid-cols-1 gap-3">
+                {['stripe', 'shopifyApiKey', 'shopifyApiSecret', 'amazonAssociateTag', 'amazonApiKey', 'amazonSecret', 'printify'].map((service) => (
+                  <div key={service} className="space-y-2">
+                    <label className="text-white font-medium capitalize">{service.replace(/([A-Z])/g, ' $1').trim()}</label>
+                    <input
+                      type="password"
+                      value={settings.apiKeys[service as keyof typeof settings.apiKeys]}
+                      onChange={(e) => updateSetting('apiKeys', service, e.target.value)}
+                      placeholder={`Enter ${service.replace(/([A-Z])/g, ' $1').trim().toLowerCase()}...`}
+                      className="w-full bg-gray-900 text-white rounded-lg px-3 py-2 text-sm border border-gray-700 focus:border-cyan-500 focus:outline-none transition-all duration-300"
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Social & Marketing */}
+            <div className="bg-gray-800/30 rounded-lg p-4 border border-gray-700">
+              <h4 className="text-orange-400 font-semibold mb-3 flex items-center gap-2">
+                <Key className="w-4 h-4" />
+                Social &amp; Marketing
+              </h4>
+              <div className="grid grid-cols-1 gap-3">
+                {['facebookAppId', 'facebookAppSecret', 'metricool'].map((service) => (
+                  <div key={service} className="space-y-2">
+                    <label className="text-white font-medium capitalize">{service.replace(/([A-Z])/g, ' $1').trim()}</label>
+                    <input
+                      type="password"
+                      value={settings.apiKeys[service as keyof typeof settings.apiKeys]}
+                      onChange={(e) => updateSetting('apiKeys', service, e.target.value)}
+                      placeholder={`Enter ${service.replace(/([A-Z])/g, ' $1').trim().toLowerCase()}...`}
+                      className="w-full bg-gray-900 text-white rounded-lg px-3 py-2 text-sm border border-gray-700 focus:border-cyan-500 focus:outline-none transition-all duration-300"
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Deployment & Infrastructure */}
+            <div className="bg-gray-800/30 rounded-lg p-4 border border-gray-700">
+              <h4 className="text-pink-400 font-semibold mb-3 flex items-center gap-2">
+                <Key className="w-4 h-4" />
+                Deployment &amp; Infrastructure
+              </h4>
+              <div className="grid grid-cols-1 gap-3">
+                {['netlify'].map((service) => (
+                  <div key={service} className="space-y-2">
+                    <label className="text-white font-medium capitalize">{service} API Key</label>
+                    <input
+                      type="password"
+                      value={settings.apiKeys[service as keyof typeof settings.apiKeys]}
+                      onChange={(e) => updateSetting('apiKeys', service, e.target.value)}
+                      placeholder={`Enter ${service} API key...`}
+                      className="w-full bg-gray-900 text-white rounded-lg px-3 py-2 text-sm border border-gray-700 focus:border-cyan-500 focus:outline-none transition-all duration-300"
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
           
+          {/* Vault Management */}
+          <div className="bg-gray-800/30 rounded-lg p-4 border border-gray-700">
+            <h4 className="text-white font-semibold mb-3 flex items-center gap-2">
+              <Shield className="w-4 h-4" />
+              Vault Management
+            </h4>
+            
+            {/* Vault Stats */}
+            <div className="grid grid-cols-2 gap-4 mb-4">
+              <div className="bg-gray-900/50 rounded-lg p-3">
+                <div className="text-cyan-400 text-sm font-medium">Total Keys</div>
+                <div className="text-white text-lg font-bold">{vaultStats.totalKeys}</div>
+              </div>
+              <div className="bg-gray-900/50 rounded-lg p-3">
+                <div className="text-green-400 text-sm font-medium">Active Keys</div>
+                <div className="text-white text-lg font-bold">{vaultStats.activeKeys}</div>
+              </div>
+            </div>
+
+            {/* Management Buttons */}
+            <div className="grid grid-cols-2 gap-3 mb-4">
+              <button
+                onClick={() => setShowEncryptionDialog(true)}
+                className={`flex items-center justify-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-300 ${
+                  isEncrypted 
+                    ? 'bg-green-600/20 text-green-400 border border-green-600/30 hover:bg-green-600/30' 
+                    : 'bg-gray-700 text-gray-300 border border-gray-600 hover:bg-gray-600'
+                }`}
+              >
+                {isEncrypted ? <Lock className="w-4 h-4" /> : <Unlock className="w-4 h-4" />}
+                {isEncrypted ? 'Encrypted' : 'Enable Encryption'}
+              </button>
+              
+              <button
+                onClick={exportVault}
+                className="flex items-center justify-center gap-2 px-3 py-2 bg-blue-600/20 text-blue-400 border border-blue-600/30 rounded-lg text-sm font-medium hover:bg-blue-600/30 transition-all duration-300"
+              >
+                <Download className="w-4 h-4" />
+                Export Backup
+              </button>
+              
+              <label className="flex items-center justify-center gap-2 px-3 py-2 bg-purple-600/20 text-purple-400 border border-purple-600/30 rounded-lg text-sm font-medium hover:bg-purple-600/30 transition-all duration-300 cursor-pointer">
+                <Upload className="w-4 h-4" />
+                Import Backup
+                <input
+                  type="file"
+                  accept=".json"
+                  onChange={importVault}
+                  className="hidden"
+                />
+              </label>
+              
+              <button
+                onClick={copyEnvToClipboard}
+                className="flex items-center justify-center gap-2 px-3 py-2 bg-orange-600/20 text-orange-400 border border-orange-600/30 rounded-lg text-sm font-medium hover:bg-orange-600/30 transition-all duration-300"
+              >
+                <Copy className="w-4 h-4" />
+                Copy .env
+              </button>
+            </div>
+
+            <button
+              onClick={generateEnvFile}
+              className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-cyan-600/20 text-cyan-400 border border-cyan-600/30 rounded-lg font-medium hover:bg-cyan-600/30 transition-all duration-300"
+            >
+              <Download className="w-4 h-4" />
+              Download .env File
+            </button>
+          </div>
+
           <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-3">
             <div className="flex items-center gap-2 text-yellow-400 mb-2">
               <Shield className="w-4 h-4" />
-              <span className="font-medium">Security Notice</span>
+              <span className="font-medium">Security Status</span>
             </div>
             <p className="text-yellow-300/80 text-sm">
-              API keys are stored locally in your browser. Never share your keys with others.
+              {isEncrypted 
+                ? `🔒 Vault is encrypted with ${vaultStats.encryptedKeys} encrypted keys` 
+                : '🔓 Vault is not encrypted. Enable encryption for enhanced security.'
+              }
             </p>
           </div>
         </div>
@@ -370,6 +712,61 @@ export function SettingsPanel() {
           Reset
         </button>
       </div>
+
+      {/* Encryption Dialog */}
+      {showEncryptionDialog && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-gray-800 rounded-lg p-6 w-96 border border-gray-700">
+            <h3 className="text-white font-semibold mb-4 flex items-center gap-2">
+              {isEncrypted ? <Unlock className="w-5 h-5" /> : <Lock className="w-5 h-5" />}
+              {isEncrypted ? 'Disable Encryption' : 'Enable Encryption'}
+            </h3>
+            
+            <div className="space-y-4">
+              <div>
+                <label className="text-white font-medium block mb-2">
+                  {isEncrypted ? 'Enter current password:' : 'Create encryption password:'}
+                </label>
+                <input
+                  type="password"
+                  value={encryptionPassword}
+                  onChange={(e) => setEncryptionPassword(e.target.value)}
+                  placeholder={isEncrypted ? 'Current password' : 'Minimum 8 characters'}
+                  className="w-full bg-gray-900 text-white rounded-lg px-3 py-2 text-sm border border-gray-700 focus:border-cyan-500 focus:outline-none"
+                />
+              </div>
+              
+              {!isEncrypted && (
+                <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-3">
+                  <p className="text-blue-300 text-sm">
+                    🔒 Encryption will secure all your API keys with AES encryption. 
+                    Make sure to remember your password - it cannot be recovered.
+                  </p>
+                </div>
+              )}
+              
+              <div className="flex gap-3">
+                <button
+                  onClick={handleEncryption}
+                  disabled={!encryptionPassword}
+                  className="flex-1 bg-cyan-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-cyan-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300"
+                >
+                  {isEncrypted ? 'Disable' : 'Enable'}
+                </button>
+                <button
+                  onClick={() => {
+                    setShowEncryptionDialog(false);
+                    setEncryptionPassword('');
+                  }}
+                  className="flex-1 bg-gray-700 text-white px-4 py-2 rounded-lg font-medium hover:bg-gray-600 transition-all duration-300"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

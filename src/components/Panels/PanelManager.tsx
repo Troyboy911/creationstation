@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { X, Maximize2, Minimize2 } from 'lucide-react';
 import { useWorkspace } from '../../contexts/WorkspaceContext';
 import { AICodePanel } from './AICodePanel';
