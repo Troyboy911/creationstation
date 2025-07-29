@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Settings, Key, Palette, Monitor, Bell, Shield, Database, Wifi } from 'lucide-react';
+import { useState } from 'react';
+import { Settings, Key, Palette, Monitor, Shield } from 'lucide-react';
 import { useWorkspace } from '../../contexts/WorkspaceContext';
 
 export function SettingsPanel() {
@@ -14,9 +14,26 @@ export function SettingsPanel() {
     gridSnap: false,
     apiKeys: {
       openai: '',
-      github: '',
       firebase: '',
-      shopify: '',
+      googleClientId: '',
+      googleClientSecret: '',
+      github: '',
+      netlify: '',
+      stripe: '',
+      metricool: '',
+      supabaseUrl: '',
+      supabaseKey: '',
+      neonDbUrl: '',
+      neonDbKey: '',
+      facebookAppId: '',
+      facebookAppSecret: '',
+      shopifyApiKey: '',
+      shopifyApiSecret: '',
+      amazonAssociateTag: '',
+      amazonApiKey: '',
+      amazonSecret: '',
+      youtube: '',
+      printify: '',
     },
     workspace: {
       defaultPanelSize: 'medium',
@@ -33,13 +50,20 @@ export function SettingsPanel() {
   ];
 
   const updateSetting = (category: string, key: string, value: any) => {
-    setSettings(prev => ({
-      ...prev,
-      [category]: {
-        ...prev[category as keyof typeof prev],
+    if (category === '') {
+      setSettings(prev => ({
+        ...prev,
         [key]: value
-      }
-    }));
+      }));
+    } else {
+      setSettings(prev => ({
+        ...prev,
+        [category]: {
+          ...(prev[category as keyof typeof prev] as object),
+          [key]: value
+        }
+      }));
+    }
   };
 
   const saveSettings = () => {
@@ -58,9 +82,26 @@ export function SettingsPanel() {
         gridSnap: false,
         apiKeys: {
           openai: '',
-          github: '',
           firebase: '',
-          shopify: '',
+          googleClientId: '',
+          googleClientSecret: '',
+          github: '',
+          netlify: '',
+          stripe: '',
+          metricool: '',
+          supabaseUrl: '',
+          supabaseKey: '',
+          neonDbUrl: '',
+          neonDbKey: '',
+          facebookAppId: '',
+          facebookAppSecret: '',
+          shopifyApiKey: '',
+          shopifyApiSecret: '',
+          amazonAssociateTag: '',
+          amazonApiKey: '',
+          amazonSecret: '',
+          youtube: '',
+          printify: '',
         },
         workspace: {
           defaultPanelSize: 'medium',
