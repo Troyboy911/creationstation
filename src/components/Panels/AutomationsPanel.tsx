@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Zap, Play, Clock, CheckCircle } from 'lucide-react';
 import { AutomationRecipe } from '../../types';
 
@@ -134,6 +134,8 @@ export function AutomationsPanel() {
                   ? 'bg-gradient-to-r from-cyan-500/30 to-blue-500/30 text-cyan-300 border-cyan-400/50 shadow-lg shadow-cyan-500/20'
                   : 'bg-gray-800/50 text-gray-400 hover:bg-gray-700/50 hover:text-cyan-300 border-gray-600/50 hover:border-cyan-400/30'
               }`}
+              aria-label={`Filter automations by ${category} category`}
+              type="button"
             >
               {category.charAt(0).toUpperCase() + category.slice(1)}
             </button>
@@ -168,6 +170,8 @@ export function AutomationsPanel() {
                       ? 'bg-yellow-500/20 text-yellow-400 border border-yellow-400/30 animate-pulse'
                       : 'bg-gradient-to-br from-cyan-500/20 to-blue-500/20 text-cyan-400 border border-cyan-400/30 hover:from-cyan-500/30 hover:to-blue-500/30 hover:shadow-lg hover:shadow-cyan-500/20'
                   }`}
+                  aria-label={isRunning ? `${recipe.name} automation is running` : `Run ${recipe.name} automation`}
+                  type="button"
                 >
                   {isRunning ? <Clock className="w-4 h-4" /> : <Play className="w-4 h-4" />}
                 </button>

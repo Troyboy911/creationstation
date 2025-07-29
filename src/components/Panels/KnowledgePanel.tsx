@@ -85,6 +85,7 @@ export function KnowledgePanel() {
           onChange={(e) => setSearchQuery(e.target.value)}
           placeholder="Search knowledge base..."
           className="w-full bg-gray-900 text-white rounded-lg pl-10 pr-3 py-2 text-sm border border-gray-700 focus:border-yellow-500 focus:outline-none transition-all duration-300"
+          aria-label="Search knowledge base"
         />
       </div>
 
@@ -97,11 +98,14 @@ export function KnowledgePanel() {
           placeholder="New note title..."
           className="flex-1 bg-gray-900 text-white rounded-lg px-3 py-2 text-sm border border-gray-700 focus:border-yellow-500 focus:outline-none transition-all duration-300"
           onKeyPress={(e) => e.key === 'Enter' && createNewNote()}
+          aria-label="New note title"
         />
         <button
           onClick={createNewNote}
           disabled={!newNoteTitle.trim()}
           className="bg-gradient-to-r from-yellow-600 to-orange-600 hover:from-yellow-500 hover:to-orange-500 disabled:from-gray-700 disabled:to-gray-600 text-white rounded-lg px-3 py-2 text-sm transition-all duration-300 shadow-lg shadow-yellow-500/20"
+          aria-label="Create new note"
+          type="button"
         >
           <Plus className="w-4 h-4" />
         </button>
@@ -154,12 +158,16 @@ export function KnowledgePanel() {
         <button
           onClick={connectToTana}
           className="w-full text-left bg-purple-600/20 hover:bg-purple-600/30 text-purple-400 rounded-lg px-3 py-2 text-sm transition-all duration-300 border border-purple-600/30 hover:shadow-lg hover:shadow-purple-500/20"
+          aria-label="Connect to Tana knowledge management platform"
+          type="button"
         >
           🧠 Connect to Tana
         </button>
         <button
           onClick={exportKnowledge}
           className="w-full text-left bg-blue-600/20 hover:bg-blue-600/30 text-blue-400 rounded-lg px-3 py-2 text-sm transition-all duration-300 border border-blue-600/30 hover:shadow-lg hover:shadow-blue-500/20"
+          aria-label="Export knowledge base to JSON file"
+          type="button"
         >
           📤 Export Knowledge Base
         </button>

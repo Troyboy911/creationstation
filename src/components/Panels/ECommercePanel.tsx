@@ -96,6 +96,8 @@ export function ECommercePanel() {
                 ? 'bg-blue-600 text-white'
                 : 'text-gray-400 hover:text-white hover:bg-gray-700/50'
             }`}
+            aria-label={`Switch to ${tab.label} tab`}
+            type="button"
           >
             <tab.icon className="w-4 h-4" />
             {tab.label}
@@ -111,6 +113,8 @@ export function ECommercePanel() {
             <button 
               onClick={addNewProduct}
               className="flex items-center gap-2 bg-gradient-to-r from-green-600 to-green-500 hover:from-green-500 hover:to-green-400 text-white rounded-lg px-3 py-1 text-sm transition-all duration-300 shadow-lg shadow-green-500/20 hover:shadow-green-500/40"
+              aria-label="Add new product to inventory"
+              type="button"
             >
               <Plus className="w-3 h-3" />
               + Add Product
@@ -134,6 +138,8 @@ export function ECommercePanel() {
                   <button 
                     onClick={() => editProduct(product.id)}
                     className="flex items-center gap-1 bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 text-white rounded px-2 py-1 text-xs transition-all duration-300 shadow-lg shadow-blue-500/20"
+                    aria-label={`Edit ${product.name} product details`}
+                    type="button"
                   >
                     <Edit className="w-3 h-3" />
                     Edit
@@ -141,6 +147,8 @@ export function ECommercePanel() {
                   <button 
                     onClick={() => promoteProduct(product.id)}
                     className="flex items-center gap-1 bg-gradient-to-r from-purple-600 to-purple-500 hover:from-purple-500 hover:to-purple-400 text-white rounded px-2 py-1 text-xs transition-all duration-300 shadow-lg shadow-purple-500/20"
+                    aria-label={`Promote ${product.name} on social media`}
+                    type="button"
                   >
                     <Share2 className="w-3 h-3" />
                     Promote
@@ -154,12 +162,16 @@ export function ECommercePanel() {
             <button 
               onClick={importCSV}
               className="text-left bg-orange-600/20 hover:bg-orange-600/30 text-orange-400 rounded-lg px-3 py-2 text-sm transition-all duration-300 border border-orange-600/30 hover:shadow-lg hover:shadow-orange-500/20"
+              aria-label="Import products from CSV file"
+              type="button"
             >
               📤 Import CSV Products
             </button>
             <button 
               onClick={syncShopify}
               className="text-left bg-blue-600/20 hover:bg-blue-600/30 text-blue-400 rounded-lg px-3 py-2 text-sm transition-all duration-300 border border-blue-600/30 hover:shadow-lg hover:shadow-blue-500/20"
+              aria-label="Synchronize products with Shopify store"
+              type="button"
             >
               🔗 Sync with Shopify
             </button>
@@ -221,6 +233,8 @@ export function ECommercePanel() {
             <button 
               onClick={sendEmailCampaign}
               className="w-full text-left bg-purple-600/20 hover:bg-purple-600/30 text-purple-400 rounded-lg px-3 py-2 text-sm transition-all duration-300 border border-purple-600/30 hover:shadow-lg hover:shadow-purple-500/20 flex items-center gap-2"
+              aria-label="Send email marketing campaign to customers"
+              type="button"
             >
               <Mail className="w-4 h-4" />
               📧 Send Email Campaign
@@ -228,6 +242,8 @@ export function ECommercePanel() {
             <button 
               onClick={sendSMSPromotion}
               className="w-full text-left bg-green-600/20 hover:bg-green-600/30 text-green-400 rounded-lg px-3 py-2 text-sm transition-all duration-300 border border-green-600/30 hover:shadow-lg hover:shadow-green-500/20 flex items-center gap-2"
+              aria-label="Send SMS promotion to opted-in customers"
+              type="button"
             >
               <MessageSquare className="w-4 h-4" />
               📱 Send SMS Promotion
@@ -235,6 +251,8 @@ export function ECommercePanel() {
             <button 
               onClick={exportCustomerData}
               className="w-full text-left bg-blue-600/20 hover:bg-blue-600/30 text-blue-400 rounded-lg px-3 py-2 text-sm transition-all duration-300 border border-blue-600/30 hover:shadow-lg hover:shadow-blue-500/20 flex items-center gap-2"
+              aria-label="Export customer data to CSV file"
+              type="button"
             >
               <Download className="w-4 h-4" />
               📊 Export Customer Data

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Palette, FileText, Workflow, Save, Play, Eye } from 'lucide-react';
 import { useWorkspace } from '../../contexts/WorkspaceContext';
 
@@ -64,6 +64,8 @@ export function NoCodePanel() {
                 ? 'bg-gradient-to-r from-cyan-600 to-blue-600 text-white shadow-lg shadow-cyan-500/20'
                 : 'text-gray-400 hover:text-white hover:bg-gray-700/50'
             }`}
+            aria-label={`Switch to ${tab.label} tab`}
+            type="button"
           >
             <tab.icon className="w-4 h-4" />
             {tab.label}
@@ -80,12 +82,16 @@ export function NoCodePanel() {
               <button
                 onClick={addFlowNode}
                 className="bg-gradient-to-r from-green-600 to-green-500 hover:from-green-500 hover:to-green-400 text-white rounded px-3 py-1 text-sm transition-all duration-300 shadow-lg shadow-green-500/20"
+                aria-label="Add new node to visual flow"
+                type="button"
               >
                 + Node
               </button>
               <button
                 onClick={previewFlow}
                 className="bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 text-white rounded px-3 py-1 text-sm transition-all duration-300 shadow-lg shadow-blue-500/20 flex items-center gap-1"
+                aria-label="Preview visual flow execution"
+                type="button"
               >
                 <Eye className="w-3 h-3" />
                 Preview
@@ -93,6 +99,8 @@ export function NoCodePanel() {
               <button
                 onClick={runFlow}
                 className="bg-gradient-to-r from-purple-600 to-purple-500 hover:from-purple-500 hover:to-purple-400 text-white rounded px-3 py-1 text-sm transition-all duration-300 shadow-lg shadow-purple-500/20 flex items-center gap-1"
+                aria-label="Execute visual flow"
+                type="button"
               >
                 <Play className="w-3 h-3" />
                 Run
@@ -133,6 +141,8 @@ export function NoCodePanel() {
             <button
               onClick={saveNote}
               className="bg-gradient-to-r from-green-600 to-green-500 hover:from-green-500 hover:to-green-400 text-white rounded px-3 py-1 text-sm transition-all duration-300 shadow-lg shadow-green-500/20 flex items-center gap-1"
+              aria-label="Save note to workspace"
+              type="button"
             >
               <Save className="w-3 h-3" />
               Save Note
@@ -145,6 +155,7 @@ export function NoCodePanel() {
             placeholder="Write your notes here..."
             className="w-full bg-gray-900 text-white rounded-lg px-3 py-3 text-sm border border-gray-700 focus:border-cyan-500 focus:outline-none resize-none transition-all duration-300"
             rows={12}
+            aria-label="Note content"
           />
         </div>
       )}
@@ -154,27 +165,51 @@ export function NoCodePanel() {
         <div className="space-y-3">
           <div className="flex justify-between items-center">
             <h3 className="text-white font-medium">Rich Text Editor</h3>
-            <button className="bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 text-white rounded px-3 py-1 text-sm transition-all duration-300 shadow-lg shadow-blue-500/20">
+            <button 
+              className="bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 text-white rounded px-3 py-1 text-sm transition-all duration-300 shadow-lg shadow-blue-500/20"
+              aria-label="Export rich text content as HTML"
+              type="button"
+            >
               Export HTML
             </button>
           </div>
           
           {/* Formatting Toolbar */}
           <div className="flex gap-1 p-2 bg-gray-800/50 rounded-lg border border-gray-700">
-            <button className="p-1 hover:bg-gray-700 rounded text-gray-400 hover:text-white transition-colors">
+            <button 
+              className="p-1 hover:bg-gray-700 rounded text-gray-400 hover:text-white transition-colors"
+              aria-label="Bold text formatting"
+              type="button"
+            >
               <strong>B</strong>
             </button>
-            <button className="p-1 hover:bg-gray-700 rounded text-gray-400 hover:text-white transition-colors">
+            <button 
+              className="p-1 hover:bg-gray-700 rounded text-gray-400 hover:text-white transition-colors"
+              aria-label="Italic text formatting"
+              type="button"
+            >
               <em>I</em>
             </button>
-            <button className="p-1 hover:bg-gray-700 rounded text-gray-400 hover:text-white transition-colors">
+            <button 
+              className="p-1 hover:bg-gray-700 rounded text-gray-400 hover:text-white transition-colors"
+              aria-label="Underline text formatting"
+              type="button"
+            >
               <u>U</u>
             </button>
             <div className="w-px bg-gray-600 mx-1" />
-            <button className="p-1 hover:bg-gray-700 rounded text-gray-400 hover:text-white transition-colors text-xs">
+            <button 
+              className="p-1 hover:bg-gray-700 rounded text-gray-400 hover:text-white transition-colors text-xs"
+              aria-label="Heading 1 formatting"
+              type="button"
+            >
               H1
             </button>
-            <button className="p-1 hover:bg-gray-700 rounded text-gray-400 hover:text-white transition-colors text-xs">
+            <button 
+              className="p-1 hover:bg-gray-700 rounded text-gray-400 hover:text-white transition-colors text-xs"
+              aria-label="Heading 2 formatting"
+              type="button"
+            >
               H2
             </button>
           </div>
@@ -183,6 +218,9 @@ export function NoCodePanel() {
             contentEditable
             className="w-full bg-gray-900 text-white rounded-lg px-3 py-3 text-sm border border-gray-700 focus:border-cyan-500 focus:outline-none min-h-[200px] transition-all duration-300"
             style={{ whiteSpace: 'pre-wrap' }}
+            role="textbox"
+            aria-label="Rich text editor content"
+            aria-multiline="true"
           >
             Start typing your rich content here...
           </div>

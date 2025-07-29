@@ -98,24 +98,32 @@ export function CloudStoragePanel() {
           <button 
             onClick={() => uploadFiles('files')}
             className="bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 text-white rounded px-3 py-2 text-xs transition-all duration-300 shadow-lg shadow-blue-500/20"
+            aria-label="Upload files to cloud storage"
+            type="button"
           >
             📁 Files
           </button>
           <button 
             onClick={() => uploadFiles('images')}
             className="bg-gradient-to-r from-purple-600 to-purple-500 hover:from-purple-500 hover:to-purple-400 text-white rounded px-3 py-2 text-xs transition-all duration-300 shadow-lg shadow-purple-500/20"
+            aria-label="Upload images to cloud storage"
+            type="button"
           >
             🖼️ Images
           </button>
           <button 
             onClick={createBackup}
             className="bg-gradient-to-r from-green-600 to-green-500 hover:from-green-500 hover:to-green-400 text-white rounded px-3 py-2 text-xs transition-all duration-300 shadow-lg shadow-green-500/20"
+            aria-label="Create backup of current workspace"
+            type="button"
           >
             💾 Backup
           </button>
           <button 
             onClick={uploadDatabase}
             className="bg-gradient-to-r from-orange-600 to-orange-500 hover:from-orange-500 hover:to-orange-400 text-white rounded px-3 py-2 text-xs transition-all duration-300 shadow-lg shadow-orange-500/20"
+            aria-label="Upload database backup to cloud"
+            type="button"
           >
             🗄️ Database
           </button>
@@ -126,10 +134,12 @@ export function CloudStoragePanel() {
       <div className="space-y-2">
         <h4 className="text-gray-400 text-sm font-medium">Recent Files</h4>
         {recentFiles.map((file, index) => (
-          <div 
+          <button 
             key={index} 
-            className="bg-gray-800/30 rounded-lg p-2 border border-gray-700/50 hover:bg-gray-700/50 transition-all duration-300 cursor-pointer hover:border-cyan-400/30 hover:shadow-lg hover:shadow-cyan-500/10"
+            className="w-full bg-gray-800/30 rounded-lg p-2 border border-gray-700/50 hover:bg-gray-700/50 transition-all duration-300 cursor-pointer hover:border-cyan-400/30 hover:shadow-lg hover:shadow-cyan-500/10"
             onClick={() => openFile(file.name, file.service)}
+            aria-label={`Open ${file.name} from ${file.service}`}
+            type="button"
           >
             <div className="flex items-center gap-2">
               <div className="text-blue-400">
@@ -142,7 +152,7 @@ export function CloudStoragePanel() {
                 <div className="text-gray-400 text-xs">{file.service} • {file.modified}</div>
               </div>
             </div>
-          </div>
+          </button>
         ))}
       </div>
 
@@ -151,6 +161,8 @@ export function CloudStoragePanel() {
         <button 
           onClick={syncAllServices}
           className="w-full text-left bg-blue-600/20 hover:bg-blue-600/30 text-blue-400 rounded-lg px-3 py-2 text-sm transition-all duration-300 border border-blue-600/30 hover:shadow-lg hover:shadow-blue-500/20 flex items-center gap-2"
+          aria-label="Synchronize all cloud services"
+          type="button"
         >
           <RefreshCw className="w-4 h-4" />
           🔄 Sync All Services
@@ -158,6 +170,8 @@ export function CloudStoragePanel() {
         <button 
           onClick={deployToFirebase}
           className="w-full text-left bg-green-600/20 hover:bg-green-600/30 text-green-400 rounded-lg px-3 py-2 text-sm transition-all duration-300 border border-green-600/30 hover:shadow-lg hover:shadow-green-500/20 flex items-center gap-2"
+          aria-label="Deploy project to Firebase hosting"
+          type="button"
         >
           <ExternalLink className="w-4 h-4" />
           📤 Deploy to Firebase

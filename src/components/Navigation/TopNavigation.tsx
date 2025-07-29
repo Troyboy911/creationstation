@@ -1,8 +1,80 @@
 import { useState } from 'react';
 import { ChevronDown, Plus, FolderOpen, Layers, Settings } from 'lucide-react';
 import { useWorkspace } from '../../contexts/WorkspaceContext';
+import { FileItem, Project } from '../../types';
 
 export function TopNavigation() {
+  const generateTemplateFiles = (template: string, projectId: string): FileItem[] => {
+    const baseFiles: FileItem[] = [];
+    
+    switch (template) {
+      case 'react':
+        baseFiles.push(
+          {
+            id: `${projectId}-app-js`,
+            name: 'App.jsx',
+            type: 'code',
+            content: 'import React from "react";\n\nfunction App() {\n  return (\n    <div className="App">\n      <h1>Welcome to your React App!</h1>\n    </div>\n  );\n}\n\nexport default App;',
+            position: { x: 100, y: 100 }
+          },
+          {
+            id: `${projectId}-package-json`,
+            name: 'package.json',
+            type: 'code',
+            content: '{\n  "name": "react-app",\n  "version": "1.0.0",\n  "dependencies": {\n    "react": "^18.0.0",\n    "react-dom": "^18.0.0"\n  }\n}',
+            position: { x: 300, y: 150 }
+          }
+        );
+        break;
+      case 'vue':
+        baseFiles.push(
+          {
+            id: `${projectId}-index-js`,
+            name: 'main.js',
+            type: 'code',
+            content: 'import { createApp } from "vue";\n\nconst app = createApp({\n  data() {\n    return {\n      message: "Hello Vue!"\n    }\n  },\n  template: `<h1>{{ message }}</h1>`\n});\n\napp.mount("#app");',
+            position: { x: 100, y: 100 }
+          }
+        );
+        break;
+      case 'flutter':
+        baseFiles.push(
+          {
+            id: `${projectId}-server-js`,
+            name: 'main.dart',
+            type: 'code',
+            content: 'import "package:flutter/material.dart";\n\nvoid main() {\n  runApp(MyApp());\n}\n\nclass MyApp extends StatelessWidget {\n  @override\n  Widget build(BuildContext context) {\n    return MaterialApp(\n      home: Scaffold(\n        appBar: AppBar(title: Text("Flutter App")),\n        body: Center(child: Text("Hello Flutter!")),\n      ),\n    );\n  }\n}',
+            position: { x: 100, y: 100 }
+          }
+        );
+        break;
+      case 'shopify':
+        baseFiles.push(
+          {
+            id: `${projectId}-product-js`,
+            name: 'Product.jsx',
+            type: 'code',
+            content: 'import React from "react";\n\nfunction Product({ name, price, image }) {\n  return (\n    <div className="product">\n      <img src={image} alt={name} />\n      <h3>{name}</h3>\n      <p>${price}</p>\n      <button>Add to Cart</button>\n    </div>\n  );\n}\n\nexport default Product;',
+            position: { x: 100, y: 100 }
+          }
+        );
+        break;
+      default:
+        baseFiles.push(
+          {
+            id: `${projectId}-readme`,
+            name: 'README.md',
+            type: 'document',
+            content: `# ${template} Project\n\nThis is your new ${template} project. Start building something amazing!`,
+            position: { x: 100, y: 100 }
+          }
+        );
+    }
+    
+    return baseFiles;
+  };
+
+
   const { state, dispatch } = useWorkspace();
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
 
@@ -15,15 +87,33 @@ export function TopNavigation() {
   ];
 
   const createNewProject = (template: string) => {
-    const newProject = {
+    const projectName = prompt('Enter project name:') || `New ${template} Project`;
+    
+    const newProject: Project = {
       id: `project-${Date.now()}`,
-      name: `New ${template.charAt(0).toUpperCase() + template.slice(1)} Project`,
-      type: template as 'react' | 'vue' | 'flutter' | 'shopify' | 'blank',
+      name: projectName,
+      description: `${template} project`,
+      createdAt: new Date(),
       lastModified: new Date(),
-      status: 'active' as const,
+      template,
+      files: [],
+      settings: {},
+      type: template as 'react' | 'vue' | 'flutter' | 'shopify' | 'blank',
+      status: 'active'
     };
+    
     dispatch({ type: 'ADD_PROJECT', payload: newProject });
     dispatch({ type: 'SET_CURRENT_PROJECT', payload: newProject });
+    
+    const savedProjects = JSON.parse(localStorage.getItem('creation-station-projects') || '[]');
+    savedProjects.push(newProject);
+    localStorage.setItem('creation-station-projects', JSON.stringify(savedProjects));
+
+    const templateFiles = generateTemplateFiles(template, newProject.id);
+    templateFiles.forEach((file: FileItem) => {
+      dispatch({ type: 'ADD_FILE', payload: file });
+    });
+    
     setActiveDropdown(null);
   };
 
@@ -83,7 +173,11 @@ export function TopNavigation() {
   };
 
   return (
-    <nav className="h-16 bg-gradient-to-r from-gray-900/95 via-black/90 to-gray-900/95 backdrop-blur-xl border-b border-cyan-500/20 flex items-center justify-between px-6 relative z-50 shadow-lg shadow-cyan-500/10">
+    <nav 
+      className="h-16 bg-gradient-to-r from-gray-900/95 via-black/90 to-gray-900/95 backdrop-blur-xl border-b border-cyan-500/20 flex items-center justify-between px-6 relative z-50 shadow-lg shadow-cyan-500/10"
+      role="navigation"
+      aria-label="Main navigation"
+    >
       {/* Holographic accent line */}
       <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-cyan-400/50 to-transparent" />
       
@@ -92,6 +186,10 @@ export function TopNavigation() {
         <button
           onClick={() => setActiveDropdown(activeDropdown === 'new' ? null : 'new')}
           className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-cyan-600/80 to-blue-600/80 hover:from-cyan-500/90 hover:to-blue-500/90 rounded-lg transition-all duration-300 group shadow-lg shadow-cyan-500/20 hover:shadow-cyan-500/40 border border-cyan-400/30"
+          aria-label="Create new project"
+          aria-expanded={activeDropdown === 'new'}
+          aria-haspopup="menu"
+          type="button"
         >
           <Plus className="w-4 h-4" />
           <span className="font-medium">New Project</span>
@@ -120,6 +218,10 @@ export function TopNavigation() {
         <button
           onClick={() => setActiveDropdown(activeDropdown === 'load' ? null : 'load')}
           className="flex items-center gap-2 px-4 py-2 bg-gray-800/50 hover:bg-gradient-to-r hover:from-cyan-500/20 hover:to-blue-500/20 rounded-lg transition-all duration-300 border border-gray-700/50 hover:border-cyan-400/30 hover:shadow-lg hover:shadow-cyan-500/20"
+          aria-label="Load existing project"
+          aria-expanded={activeDropdown === 'load'}
+          aria-haspopup="menu"
+          type="button"
         >
           <FolderOpen className="w-4 h-4" />
           <span className="font-medium">Load Project</span>
@@ -166,6 +268,10 @@ export function TopNavigation() {
           <button
             onClick={() => setActiveDropdown(activeDropdown === 'switch' ? null : 'switch')}
             className="flex items-center gap-2 px-4 py-2 bg-gray-800/50 hover:bg-gradient-to-r hover:from-cyan-500/20 hover:to-blue-500/20 rounded-lg transition-all duration-300 border border-gray-700/50 hover:border-cyan-400/30 hover:shadow-lg hover:shadow-cyan-500/20"
+            aria-label="Switch between projects"
+            aria-expanded={activeDropdown === 'switch'}
+            aria-haspopup="menu"
+            type="button"
           >
             <Layers className="w-4 h-4" />
             <span className="font-medium">
@@ -184,6 +290,18 @@ export function TopNavigation() {
                     key={project.id}
                     onClick={() => {
                       dispatch({ type: 'SET_CURRENT_PROJECT', payload: project });
+                      
+                      if (project.files && project.files.length > 0) {
+                        project.files.forEach((file: FileItem) => {
+                          dispatch({ type: 'ADD_FILE', payload: file });
+                        });
+                      } else {
+                        const templateFiles = generateTemplateFiles(project.template || project.type || 'blank', project.id);
+                        templateFiles.forEach((file: FileItem) => {
+                          dispatch({ type: 'ADD_FILE', payload: file });
+                        });
+                      }
+                      
                       setActiveDropdown(null);
                     }}
                     className={`w-full flex items-center justify-between px-4 py-3 hover:bg-gray-800/50 transition-colors text-left first:rounded-t-lg last:rounded-b-lg ${
@@ -192,11 +310,11 @@ export function TopNavigation() {
                   >
                     <div>
                       <div className="text-white font-medium">{project.name}</div>
-                      <div className="text-gray-400 text-sm">{project.type}</div>
+                      <div className="text-gray-400 text-sm">{project.template || project.type || 'Project'}</div>
                     </div>
                     <div className={`w-2 h-2 rounded-full ${
-                      project.status === 'active' ? 'bg-green-500' : 
-                      project.status === 'paused' ? 'bg-yellow-500' : 'bg-gray-500'
+                      (project.status || 'active') === 'active' ? 'bg-green-500' : 
+                      (project.status || 'active') === 'paused' ? 'bg-yellow-500' : 'bg-gray-500'
                     }`} />
                   </button>
                 ))
@@ -205,7 +323,11 @@ export function TopNavigation() {
           )}
         </div>
 
-        <button className="p-2 bg-gray-800/50 hover:bg-gradient-to-r hover:from-cyan-500/20 hover:to-blue-500/20 rounded-lg transition-all duration-300 border border-gray-700/50 hover:border-cyan-400/30 hover:shadow-lg hover:shadow-cyan-500/20">
+        <button 
+          className="p-2 bg-gray-800/50 hover:bg-gradient-to-r hover:from-cyan-500/20 hover:to-blue-500/20 rounded-lg transition-all duration-300 border border-gray-700/50 hover:border-cyan-400/30 hover:shadow-lg hover:shadow-cyan-500/20"
+          aria-label="Open settings"
+          type="button"
+        >
           <Settings className="w-4 h-4" />
         </button>
       </div>

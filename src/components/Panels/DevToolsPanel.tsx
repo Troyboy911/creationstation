@@ -96,6 +96,8 @@ export function DevToolsPanel() {
           <button 
             onClick={startDevServer}
             className="w-full text-left bg-green-600/20 hover:bg-green-600/30 text-green-400 rounded-lg px-3 py-2 text-sm transition-all duration-300 border border-green-600/30 flex items-center gap-2 hover:shadow-lg hover:shadow-green-500/20"
+            aria-label="Start development server on localhost:3000"
+            type="button"
           >
             <Play className="w-4 h-4" />
             Start Dev Server
@@ -103,18 +105,24 @@ export function DevToolsPanel() {
           <button 
             onClick={buildDockerImage}
             className="w-full text-left bg-blue-600/20 hover:bg-blue-600/30 text-blue-400 rounded-lg px-3 py-2 text-sm transition-all duration-300 border border-blue-600/30 hover:shadow-lg hover:shadow-blue-500/20"
+            aria-label="Build Docker image for containerized deployment"
+            type="button"
           >
             🐳 Build Docker Image
           </button>
           <button 
             onClick={deployToFirebase}
             className="w-full text-left bg-purple-600/20 hover:bg-purple-600/30 text-purple-400 rounded-lg px-3 py-2 text-sm transition-all duration-300 border border-purple-600/30 hover:shadow-lg hover:shadow-purple-500/20"
+            aria-label="Deploy application to Firebase hosting"
+            type="button"
           >
             🚀 Deploy to Firebase
           </button>
           <button 
             onClick={openStackBlitz}
             className="w-full text-left bg-orange-600/20 hover:bg-orange-600/30 text-orange-400 rounded-lg px-3 py-2 text-sm transition-all duration-300 border border-orange-600/30 hover:shadow-lg hover:shadow-orange-500/20 flex items-center gap-2"
+            aria-label="Open project in StackBlitz online IDE"
+            type="button"
           >
             <ExternalLink className="w-4 h-4" />
             📝 Open in StackBlitz
@@ -129,18 +137,24 @@ export function DevToolsPanel() {
           <button 
             onClick={commitChanges}
             className="w-full bg-gradient-to-r from-gray-700 to-gray-600 hover:from-gray-600 hover:to-gray-500 text-white rounded px-3 py-2 text-sm transition-all duration-300 shadow-lg shadow-gray-500/20"
+            aria-label="Commit current changes to Git repository"
+            type="button"
           >
             Commit Changes
           </button>
           <button 
             onClick={createPullRequest}
             className="w-full bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 text-white rounded px-3 py-2 text-sm transition-all duration-300 shadow-lg shadow-blue-500/20"
+            aria-label="Create new pull request for code review"
+            type="button"
           >
             Create Pull Request
           </button>
           <button 
             onClick={mergeToMain}
             className="w-full bg-gradient-to-r from-green-600 to-green-500 hover:from-green-500 hover:to-green-400 text-white rounded px-3 py-2 text-sm transition-all duration-300 shadow-lg shadow-green-500/20"
+            aria-label="Merge current branch to main branch"
+            type="button"
           >
             Merge to Main
           </button>
