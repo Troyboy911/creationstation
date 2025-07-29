@@ -17,7 +17,8 @@ type WorkspaceAction =
   | { type: 'UPDATE_FILE_POSITION'; payload: { id: string; position: { x: number; y: number } } }
   | { type: 'TOGGLE_PANEL'; payload: string }
   | { type: 'SET_DRAGGING'; payload: boolean }
-  | { type: 'ADD_PROJECT'; payload: Project };
+  | { type: 'ADD_PROJECT'; payload: Project }
+  | { type: 'UPDATE_API_CONNECTIONS'; payload: APIConnection[] };
 
 const initialState: WorkspaceState = {
   currentProject: null,
@@ -72,6 +73,8 @@ function workspaceReducer(state: WorkspaceState, action: WorkspaceAction): Works
       return { ...state, isDragging: action.payload };
     case 'ADD_PROJECT':
       return { ...state, projects: [...state.projects, action.payload] };
+    case 'UPDATE_API_CONNECTIONS':
+      return { ...state, apiConnections: action.payload };
     default:
       return state;
   }
