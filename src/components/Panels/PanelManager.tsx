@@ -87,6 +87,29 @@ export function PanelManager() {
     e.stopPropagation();
   }, [panelStates, state.panels, dispatch]);
 
+  const handleTouchStart = useCallback((e: React.TouchEvent, panelId: string) => {
+    if (panelStates[panelId]?.isMaximized) {
+      return;
+    }
+    
+    const panel = state.panels.find(p => p.id === panelId);
+    if (!panel) {
+      return;
+    }
+    
+    const touch = e.touches[0];
+    const offset = {
+      x: touch.clientX - panel.position.x,
+      y: touch.clientY - panel.position.y
+    };
+    
+    setDragState({ isDragging: true, panelId, offset });
+    dispatch({ type: 'SET_DRAGGING', payload: true });
+    
+    e.preventDefault();
+    e.stopPropagation();
+  }, [panelStates, state.panels, dispatch]);
+
   const handleMouseMove = useCallback((e: MouseEvent) => {
     if (!dragState.isDragging || !dragState.panelId) return;
     
@@ -97,8 +120,38 @@ export function PanelManager() {
     
     const viewportWidth = window.innerWidth;
     const viewportHeight = window.innerHeight;
-    newPosition.x = Math.max(80, Math.min(newPosition.x, viewportWidth - 300));
-    newPosition.y = Math.max(64, Math.min(newPosition.y, viewportHeight - 200));
+    const minX = 80;
+    const minY = 64;
+    const maxX = Math.max(minX, viewportWidth - 280);
+    const maxY = Math.max(minY, viewportHeight - 150);
+    
+    newPosition.x = Math.max(minX, Math.min(newPosition.x, maxX));
+    newPosition.y = Math.max(minY, Math.min(newPosition.y, maxY));
+    
+    dispatch({ 
+      type: 'UPDATE_PANEL_POSITION', 
+      payload: { id: dragState.panelId, position: newPosition }
+    });
+  }, [dragState, dispatch]);
+
+  const handleTouchMove = useCallback((e: TouchEvent) => {
+    if (!dragState.isDragging || !dragState.panelId) return;
+    
+    const touch = e.touches[0];
+    const newPosition = {
+      x: touch.clientX - dragState.offset.x,
+      y: touch.clientY - dragState.offset.y
+    };
+    
+    const viewportWidth = window.innerWidth;
+    const viewportHeight = window.innerHeight;
+    const minX = 80;
+    const minY = 64;
+    const maxX = Math.max(minX, viewportWidth - 280);
+    const maxY = Math.max(minY, viewportHeight - 150);
+    
+    newPosition.x = Math.max(minX, Math.min(newPosition.x, maxX));
+    newPosition.y = Math.max(minY, Math.min(newPosition.y, maxY));
     
     dispatch({ 
       type: 'UPDATE_PANEL_POSITION', 
@@ -111,17 +164,26 @@ export function PanelManager() {
     dispatch({ type: 'SET_DRAGGING', payload: false });
   }, [dispatch]);
 
+  const handleTouchEnd = useCallback(() => {
+    setDragState({ isDragging: false, panelId: null, offset: { x: 0, y: 0 } });
+    dispatch({ type: 'SET_DRAGGING', payload: false });
+  }, [dispatch]);
+
   useEffect(() => {
     if (dragState.isDragging) {
       document.addEventListener('mousemove', handleMouseMove, { passive: false });
       document.addEventListener('mouseup', handleMouseUp, { passive: false });
+      document.addEventListener('touchmove', handleTouchMove, { passive: false });
+      document.addEventListener('touchend', handleTouchEnd, { passive: false });
       
       return () => {
         document.removeEventListener('mousemove', handleMouseMove);
         document.removeEventListener('mouseup', handleMouseUp);
+        document.removeEventListener('touchmove', handleTouchMove);
+        document.removeEventListener('touchend', handleTouchEnd);
       };
     }
-  }, [dragState.isDragging, handleMouseMove, handleMouseUp]);
+  }, [dragState.isDragging, handleMouseMove, handleMouseUp, handleTouchMove, handleTouchEnd]);
 
   const constrainToViewport = (panel: { id: string; position: { x: number; y: number }; size: { width: number; height: number } }) => {
     const viewportWidth = window.innerWidth;
@@ -133,22 +195,30 @@ export function PanelManager() {
     
     if (panelState?.isMaximized) {
       return {
-        left: 80, // Account for sidebar
-        top: 64, // Account for top nav
-        width: viewportWidth - 100,
-        height: viewportHeight - 84,
+        left: 80,
+        top: 64,
+        width: Math.max(300, viewportWidth - 100),
+        height: Math.max(200, viewportHeight - 84),
       };
     }
     
-    // Ensure panel stays within viewport
-    x = Math.max(80, Math.min(x, viewportWidth - width - 20));
-    y = Math.max(64, Math.min(y, viewportHeight - height - 20));
+    const responsiveWidth = Math.min(width, viewportWidth - 100);
+    const responsiveHeight = Math.min(height, viewportHeight - 120);
+    
+    // Ensure panel stays within viewport with responsive constraints
+    const minX = 80;
+    const minY = 64;
+    const maxX = Math.max(minX, viewportWidth - responsiveWidth - 20);
+    const maxY = Math.max(minY, viewportHeight - responsiveHeight - 20);
+    
+    x = Math.max(minX, Math.min(x, maxX));
+    y = Math.max(minY, Math.min(y, maxY));
     
     return {
       left: x,
       top: y,
-      width: panelState?.isMinimized ? width : width,
-      height: panelState?.isMinimized ? 57 : height,
+      width: panelState?.isMinimized ? responsiveWidth : responsiveWidth,
+      height: panelState?.isMinimized ? 57 : responsiveHeight,
     };
   };
   // Auto-minimize panels when clicking outside
@@ -217,9 +287,11 @@ export function PanelManager() {
             <div 
               className="panel-header flex items-center justify-between p-3 cursor-move select-none"
               onMouseDown={(e) => handleMouseDown(e, panel.id)}
+              onTouchStart={(e) => handleTouchStart(e, panel.id)}
               style={{ 
                 cursor: panelStates[panel.id]?.isMaximized ? 'default' : 'move',
-                userSelect: 'none'
+                userSelect: 'none',
+                touchAction: 'none'
               }}
               role="banner"
               aria-label={`${panel.title} panel header - drag to move`}
