@@ -1,4 +1,3 @@
-import React from 'react';
 import { WorkspaceProvider } from './contexts/WorkspaceContext';
 import { TopNavigation } from './components/Navigation/TopNavigation';
 import { ToolPanel } from './components/Sidebar/ToolPanel';
