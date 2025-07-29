@@ -1,7 +1,7 @@
 class IntegrationService {
   private baseUrl = '/api/integrations';
 
-  async connectService(service: string, config?: any) {
+  async connectService(service: string, config?: Record<string, unknown>) {
     try {
       const response = await fetch(`${this.baseUrl}/${service}/connect`, {
         method: 'POST',

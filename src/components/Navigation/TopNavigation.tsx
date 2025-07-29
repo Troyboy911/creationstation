@@ -113,7 +113,7 @@ export function TopNavigation() {
       if (response.ok) {
         const result = await response.json();
         if (result.files) {
-          result.files.forEach((file: any) => {
+          result.files.forEach((file: FileItem) => {
             dispatch({ type: 'ADD_FILE', payload: file });
           });
         }
@@ -184,7 +184,7 @@ export function TopNavigation() {
             dispatch({ type: 'SET_CURRENT_PROJECT', payload: result.project });
           }
           if (result.files) {
-            result.files.forEach((file: any) => {
+            result.files.forEach((file: FileItem) => {
               dispatch({ type: 'ADD_FILE', payload: file });
             });
           }
@@ -217,7 +217,7 @@ export function TopNavigation() {
           if (response.ok) {
             const result = await response.json();
             if (result.files) {
-              result.files.forEach((extractedFile: any) => {
+              result.files.forEach((extractedFile: FileItem) => {
                 dispatch({ type: 'ADD_FILE', payload: extractedFile });
               });
             }

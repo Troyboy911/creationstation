@@ -1,4 +1,4 @@
-export async function mcpToolCall(server: string, toolName: string, args: any = {}) {
+export async function mcpToolCall(server: string, toolName: string, args: Record<string, unknown> = {}) {
   try {
     const response = await fetch('/api/mcp/tool-call', {
       method: 'POST',

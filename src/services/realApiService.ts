@@ -1,7 +1,9 @@
+import { Product, DockerOptions, APIResponse, MCPArgs, ProjectData, RepoData, PromptData, PathData } from '../types';
+
 class RealApiService {
   private baseUrl = '/api';
 
-  async post(endpoint: string, data?: any) {
+  async post<T = unknown>(endpoint: string, data?: unknown): Promise<APIResponse<T>> {
     try {
       const response = await fetch(`${this.baseUrl}${endpoint}`, {
         method: 'POST',
@@ -18,7 +20,7 @@ class RealApiService {
       return response.json();
     } catch (error) {
       console.warn(`API ${endpoint} failed:`, error);
-      return this.mockResponse(endpoint, data);
+      return this.mockResponse(endpoint, data) as APIResponse<T>;
     }
   }
 
@@ -37,7 +39,7 @@ class RealApiService {
     }
   }
 
-  private mockResponse(endpoint: string, data?: any) {
+  private mockResponse(endpoint: string, data?: unknown): APIResponse {
     if (endpoint.includes('/dev/start')) {
       return { success: true, url: 'http://localhost:3000' };
     }
@@ -78,20 +80,20 @@ class RealApiService {
       return { success: true, videoUrl: 'https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_1mb.mp4' };
     }
     if (endpoint.includes('/vscode/open')) {
-      return { success: true, url: 'vscode://file' + (data?.path || '/tmp/file.txt') };
+      return { success: true, url: 'vscode://file' + ((data as PathData)?.path || '/tmp/file.txt') };
     }
     if (endpoint.includes('/ai/generate-image')) {
       return { 
         success: true, 
         imageUrl: `https://picsum.photos/512/512?random=${Date.now()}`,
-        prompt: data?.prompt || 'Generated image'
+        prompt: (data as PromptData)?.prompt || 'Generated image'
       };
     }
     if (endpoint.includes('/ai/generate-video')) {
       return { 
         success: true, 
         videoUrl: `https://sample-videos.com/zip/10/mp4/SampleVideo_360x240_1mb.mp4?t=${Date.now()}`,
-        prompt: data?.prompt || 'Generated video'
+        prompt: (data as PromptData)?.prompt || 'Generated video'
       };
     }
     if (endpoint.includes('/github/clone')) {
@@ -99,8 +101,8 @@ class RealApiService {
         success: true,
         project: {
           id: `github-${Date.now()}`,
-          name: data?.repoUrl?.split('/').pop() || 'GitHub Project',
-          description: `Cloned from ${data?.repoUrl}`,
+          name: (data as RepoData)?.repoUrl?.split('/').pop() || 'GitHub Project',
+          description: `Cloned from ${(data as RepoData)?.repoUrl}`,
           type: 'react',
           lastModified: new Date(),
           createdAt: new Date(),
@@ -111,7 +113,7 @@ class RealApiService {
             id: `readme-${Date.now()}`,
             name: 'README.md',
             type: 'document',
-            content: `# ${data?.repoUrl?.split('/').pop() || 'Project'}\n\nCloned from ${data?.repoUrl}`,
+            content: `# ${(data as RepoData)?.repoUrl?.split('/').pop() || 'Project'}\n\nCloned from ${(data as RepoData)?.repoUrl}`,
             position: { x: 150, y: 150 }
           }
         ]
@@ -125,7 +127,7 @@ class RealApiService {
             id: `file-${Date.now()}`,
             name: 'README.md',
             type: 'document',
-            content: `# ${data?.project?.name || 'New Project'}\n\nGenerated project files.`,
+            content: `# ${(data as ProjectData)?.project?.name || 'New Project'}\n\nGenerated project files.`,
             position: { x: 100, y: 100 }
           }
         ]
@@ -134,7 +136,12 @@ class RealApiService {
     if (endpoint.includes('/github/clone')) {
       return { 
         success: true,
-        project: { id: 'cloned-project', name: 'Cloned Repository' },
+        project: { 
+          id: 'cloned-project', 
+          name: 'Cloned Repository',
+          lastModified: new Date(),
+          createdAt: new Date()
+        },
         files: [
           {
             id: `file-${Date.now()}`,
@@ -166,8 +173,8 @@ class RealApiService {
   };
 
   docker = {
-    build: (options?: any) => this.post('/docker/build', options),
-    run: (options?: any) => this.post('/docker/run', options),
+    build: (options?: DockerOptions) => this.post('/docker/build', options),
+    run: (options?: DockerOptions) => this.post('/docker/run', options),
     status: () => this.get('/docker/status')
   };
 
@@ -204,14 +211,14 @@ class RealApiService {
   };
 
   social = {
-    promote: (product: any) => this.post('/social/promote', { product }),
+    promote: (product: Product) => this.post('/social/promote', { product }),
     post: (content: string, platforms: string[]) => this.post('/social/post', { content, platforms })
   };
 
   shopify = {
     sync: () => this.post('/shopify/sync'),
-    createProduct: (product: any) => this.post('/shopify/products', product),
-    updateProduct: (id: string, product: any) => this.post(`/shopify/products/${id}`, product)
+    createProduct: (product: Product) => this.post('/shopify/products', product),
+    updateProduct: (id: string, product: Partial<Product>) => this.post(`/shopify/products/${id}`, product)
   };
 
   email = {
@@ -226,7 +233,7 @@ class RealApiService {
   };
 
   mcp = {
-    toolCall: (server: string, toolName: string, args: any) => 
+    toolCall: (server: string, toolName: string, args: MCPArgs) => 
       this.post('/mcp/tool-call', { server, toolName, args })
   };
 

@@ -31,8 +31,9 @@ export function LoginModal({ isOpen, onClose }: LoginModalProps) {
       onClose();
       setEmail('');
       setPassword('');
-    } catch (error: any) {
-      setError(error.message || 'Authentication failed');
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Authentication failed';
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }

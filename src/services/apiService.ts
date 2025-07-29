@@ -1,7 +1,9 @@
+import { Product, DockerOptions, APIResponse } from '../types';
+
 class ApiService {
   private baseUrl = '/api';
 
-  async post(endpoint: string, data?: any) {
+  async post<T = unknown>(endpoint: string, data?: unknown): Promise<APIResponse<T>> {
     const response = await fetch(`${this.baseUrl}${endpoint}`, {
       method: 'POST',
       headers: {
@@ -34,8 +36,8 @@ class ApiService {
   };
 
   docker = {
-    build: (options?: any) => this.post('/docker/build', options),
-    run: (options?: any) => this.post('/docker/run', options),
+    build: (options?: DockerOptions) => this.post('/docker/build', options),
+    run: (options?: DockerOptions) => this.post('/docker/run', options),
     status: () => this.get('/docker/status')
   };
 
@@ -72,14 +74,14 @@ class ApiService {
   };
 
   social = {
-    promote: (product: any) => this.post('/social/promote', { product }),
+    promote: (product: Product) => this.post('/social/promote', { product }),
     post: (content: string, platforms: string[]) => this.post('/social/post', { content, platforms })
   };
 
   shopify = {
     sync: () => this.post('/shopify/sync'),
-    createProduct: (product: any) => this.post('/shopify/products', product),
-    updateProduct: (id: string, product: any) => this.post(`/shopify/products/${id}`, product)
+    createProduct: (product: Product) => this.post('/shopify/products', product),
+    updateProduct: (id: string, product: Partial<Product>) => this.post(`/shopify/products/${id}`, product)
   };
 
   email = {
