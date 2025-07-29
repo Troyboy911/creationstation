@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useReducer, ReactNode } from 'react';
+import React, { createContext, useContext, useReducer, ReactNode, useEffect } from 'react';
 import { Project, FileItem, Panel, APIConnection } from '../types';
 
 interface WorkspaceState {
@@ -15,6 +15,7 @@ type WorkspaceAction =
   | { type: 'ADD_FILE'; payload: FileItem }
   | { type: 'REMOVE_FILE'; payload: string }
   | { type: 'UPDATE_FILE_POSITION'; payload: { id: string; position: { x: number; y: number } } }
+  | { type: 'UPDATE_PANEL_POSITION'; payload: { id: string; position: { x: number; y: number } } }
   | { type: 'TOGGLE_PANEL'; payload: string }
   | { type: 'SET_DRAGGING'; payload: boolean }
   | { type: 'ADD_PROJECT'; payload: Project }
@@ -60,6 +61,15 @@ function workspaceReducer(state: WorkspaceState, action: WorkspaceAction): Works
             : f
         )
       };
+    case 'UPDATE_PANEL_POSITION':
+      return {
+        ...state,
+        panels: state.panels.map(p => 
+          p.id === action.payload.id 
+            ? { ...p, position: action.payload.position }
+            : p
+        )
+      };
     case 'TOGGLE_PANEL':
       return {
         ...state,
@@ -87,6 +97,20 @@ const WorkspaceContext = createContext<{
 
 export function WorkspaceProvider({ children }: { children: ReactNode }) {
   const [state, dispatch] = useReducer(workspaceReducer, initialState);
+
+  useEffect(() => {
+    const savedProjects = localStorage.getItem('creation-station-projects');
+    if (savedProjects) {
+      try {
+        const projects = JSON.parse(savedProjects);
+        projects.forEach((project: Project) => {
+          dispatch({ type: 'ADD_PROJECT', payload: project });
+        });
+      } catch (error) {
+        console.warn('Could not load saved projects:', error);
+      }
+    }
+  }, []);
 
   return (
     <WorkspaceContext.Provider value={{ state, dispatch }}>

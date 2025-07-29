@@ -1,9 +1,14 @@
 export interface Project {
   id: string;
   name: string;
-  type: 'react' | 'vue' | 'flutter' | 'shopify' | 'blank';
+  description?: string;
+  type?: 'react' | 'vue' | 'flutter' | 'shopify' | 'blank';
+  template?: string;
   lastModified: Date;
-  status: 'active' | 'paused' | 'completed';
+  createdAt?: Date;
+  status?: 'active' | 'paused' | 'completed';
+  files?: FileItem[];
+  settings?: Record<string, unknown>;
 }
 
 export interface FileItem {
